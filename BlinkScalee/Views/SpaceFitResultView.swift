@@ -61,7 +61,7 @@ struct SpaceFitResultView: View {
         }
         .padding(.top)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
+        .background(AppPalette.background)
     }
 
     private var estimateCard: some View {
@@ -80,7 +80,7 @@ struct SpaceFitResultView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppPalette.background.opacity(0.72))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 

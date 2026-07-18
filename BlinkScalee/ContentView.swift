@@ -29,15 +29,26 @@ enum AppState: Equatable {
     case spaceFitResult(SpaceEstimate, [MockProduct])
 }
 
+enum AppTab: Hashable {
+    case home
+    case category
+    case profile
+    case search
+}
+
 struct ContentView: View {
     // TEMPORARY for testing the polished product page + AR Quick Look
     // directly on launch, skipping the catalog. Nothing else was deleted —
     // set this back to `.catalog` (and revert the #Preview below) once
     // you're done checking the "View in your room" button.
     @State private var appState: AppState = .onboarding
+    @State private var selectedTab: AppTab = .home
 
     var body: some View {
         ZStack {
+            AppPalette.background
+                .ignoresSafeArea()
+
             switch appState {
             case .onboarding:
                 OnboardingView(
@@ -50,10 +61,20 @@ struct ContentView: View {
                 .transition(.opacity)
 
             case .home:
-                HomePlaceholderView(
-                    onBrowseProducts: {
+                AppTabContainer(
+                    selectedTab: $selectedTab,
+                    onSelectProduct: { product in
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            if let polished = product.polishedPageContent {
+                                appState = .polishedProductPage(polished)
+                            } else {
+                                appState = .productDetail(product)
+                            }
+                        }
+                    },
+                    onFindForSpace: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            appState = .spaceFitCapture
                         }
                     }
                 )
@@ -89,7 +110,7 @@ struct ContentView: View {
                     product: product,
                     onBack: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            showCategory()
                         }
                     },
                     onSeeInRoom: {
@@ -125,7 +146,7 @@ struct ContentView: View {
                     dimensions: dims,
                     onDone: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            showCategory()
                         }
                     }
                 )
@@ -136,7 +157,7 @@ struct ContentView: View {
                     content: content,
                     onBack: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            showCategory()
                         }
                     },
                     onAddToCart: {} // no cart model yet — button is decorative for the demo
@@ -151,7 +172,7 @@ struct ContentView: View {
                 SpaceFitCaptureView(
                     onCancel: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            showCategory()
                         }
                     },
                     onPhotoCaptured: { photo in
@@ -172,7 +193,7 @@ struct ContentView: View {
                     },
                     onCancel: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            showCategory()
                         }
                     }
                 )
@@ -196,7 +217,7 @@ struct ContentView: View {
                     },
                     onDone: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .catalog
+                            showCategory()
                         }
                     },
                     onRetry: {
@@ -208,6 +229,12 @@ struct ContentView: View {
                 .transition(.opacity)
             }
         }
+        .preferredColorScheme(.dark)
+    }
+
+    private func showCategory() {
+        selectedTab = .category
+        appState = .home
     }
 }
 

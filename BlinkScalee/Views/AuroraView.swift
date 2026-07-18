@@ -12,9 +12,9 @@ import SwiftUI
 struct AuroraView: View {
     /// Three color stops (start, middle, end), same defaults as the web version.
     var colorStops: [Color] = [
-        Color(red: 0.322, green: 0.153, blue: 1.0),   // #5227FF
-        Color(red: 0.486, green: 1.0,   blue: 0.404), // #7CFF67
-        Color(red: 0.322, green: 0.153, blue: 1.0)    // #5227FF
+        Color(red: 216 / 255, green: 91 / 255, blue: 41 / 255), // #D85B29
+        Color(red: 216 / 255, green: 91 / 255, blue: 41 / 255), // #D85B29
+        Color(red: 216 / 255, green: 91 / 255, blue: 41 / 255)  // #D85B29
     ]
     var amplitude: Double = 1.0
     var blend: Double = 0.5
@@ -33,7 +33,7 @@ struct AuroraView: View {
             GeometryReader { geo in
                 let size = geo.size
                 Rectangle()
-                    .fill(.black)
+                    .fill(AppPalette.background)
                     .colorEffect(
                         ShaderLibrary.aurora(
                             .float2(Float(size.width), Float(size.height)),
@@ -53,5 +53,5 @@ struct AuroraView: View {
 
 #Preview {
     AuroraView()
-        .background(.black)
+        .background(AppPalette.background)
 }

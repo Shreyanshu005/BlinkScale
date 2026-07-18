@@ -37,7 +37,7 @@ struct ProductCatalogView: View {
                 }
                 .padding(16)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppPalette.background)
         }
     }
 
@@ -84,7 +84,7 @@ struct ProductCatalogView: View {
         .font(.title2)
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
-        .background(.ultraThinMaterial)
+        .background(AppPalette.background)
     }
 }
 
@@ -104,22 +104,22 @@ private struct ProductCard: View {
 
             Text(product.category.uppercased())
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.6))
 
             Text(product.name)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(2)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
 
             Text(product.weightOrSizeLabel)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.6))
 
             Text("₹\(product.priceRupees)")
                 .font(.subheadline.weight(.bold))
         }
         .padding(10)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppPalette.background.opacity(0.72))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

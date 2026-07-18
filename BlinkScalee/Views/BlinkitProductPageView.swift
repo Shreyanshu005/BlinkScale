@@ -26,7 +26,7 @@ struct BlinkitProductPageView: View {
     // MARK: - Palette (sampled from the reference screenshot)
 
     private enum Palette {
-        static let background = Color(red: 0.07, green: 0.07, blue: 0.08)
+        static let background = AppPalette.background
         static let variantPillBackground = Color(red: 0.15, green: 0.17, blue: 0.28)
         static let variantLabelText = Color(red: 0.56, green: 0.59, blue: 0.72)
         static let viewDetailsGreen = Color(red: 0.05, green: 0.24, blue: 0.12)

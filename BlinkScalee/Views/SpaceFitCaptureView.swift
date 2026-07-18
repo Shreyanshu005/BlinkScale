@@ -128,8 +128,8 @@ struct SpaceFitCaptureView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(.secondarySystemBackground))
-                    .foregroundStyle(.primary)
+                    .background(AppPalette.background.opacity(0.72))
+                    .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
         }

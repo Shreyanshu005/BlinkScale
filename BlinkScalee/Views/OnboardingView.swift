@@ -15,7 +15,7 @@ struct OnboardingView: View {
     var body: some View {
         ZStack {
             // Solid base so transparent aurora regions stay dark.
-            Color.black
+            AppPalette.background
                 .ignoresSafeArea()
 
             // Animated aurora, blurred and pushed back behind a scrim.
@@ -26,7 +26,7 @@ struct OnboardingView: View {
 
             // Darkening scrim for legible foreground content.
             LinearGradient(
-                colors: [.black.opacity(0.1), .black.opacity(0.55)],
+                colors: [AppPalette.background.opacity(0.1), AppPalette.background.opacity(0.75)],
                 startPoint: .top,
                 endPoint: .bottom
             )
