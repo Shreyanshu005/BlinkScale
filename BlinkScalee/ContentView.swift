@@ -26,7 +26,7 @@ enum AppState: Equatable {
     // flow above; entered directly from the catalog screen.
     case spaceFitCapture
     case spaceFitAnalyzing(CapturedSpacePhoto)
-    case spaceFitResult(SpaceEstimate, MockProduct?)
+    case spaceFitResult(SpaceEstimate, [MockProduct])
 }
 
 struct ContentView: View {
@@ -76,7 +76,7 @@ struct ContentView: View {
                             }
                         }
                     },
-                    onFindTableForSpace: {
+                    onFindForSpace: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             appState = .spaceFitCapture
                         }
@@ -165,10 +165,9 @@ struct ContentView: View {
             case .spaceFitAnalyzing(let photo):
                 SpaceFitAnalyzingView(
                     photo: photo,
-                    onComplete: { estimate in
-                        let match = TableMatcher.bestFit(for: estimate)
+                    onComplete: { estimate, matches in
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .spaceFitResult(estimate, match)
+                            appState = .spaceFitResult(estimate, matches)
                         }
                     },
                     onCancel: {
@@ -179,10 +178,22 @@ struct ContentView: View {
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
 
-            case .spaceFitResult(let estimate, let match):
+            case .spaceFitResult(let estimate, let matches):
                 SpaceFitResultView(
                     estimate: estimate,
-                    recommendedTable: match,
+                    matches: matches,
+                    onSelectProduct: { product in
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            // Same routing rule as the catalog: real supplied
+                            // assets get the polished AR page, everything
+                            // else falls through to the live-AI flow.
+                            if let polished = product.polishedPageContent {
+                                appState = .polishedProductPage(polished)
+                            } else {
+                                appState = .productDetail(product)
+                            }
+                        }
+                    },
                     onDone: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             appState = .catalog

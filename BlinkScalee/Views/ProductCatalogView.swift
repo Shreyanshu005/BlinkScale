@@ -12,7 +12,7 @@ import SwiftUI
 
 struct ProductCatalogView: View {
     let onSelectProduct: (MockProduct) -> Void
-    let onFindTableForSpace: () -> Void
+    let onFindForSpace: () -> Void
 
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
@@ -42,14 +42,14 @@ struct ProductCatalogView: View {
     }
 
     private var findTableBanner: some View {
-        Button(action: onFindTableForSpace) {
+        Button(action: onFindForSpace) {
             HStack(spacing: 12) {
                 Image(systemName: "camera.viewfinder")
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Not sure what table fits?")
+                    Text("Not sure what fits your space?")
                         .font(.subheadline.weight(.semibold))
-                    Text("Snap a photo of your space — we'll match a table to it")
+                    Text("Snap a photo and tell us what you're after — we'll match products to it")
                         .font(.caption)
                         .opacity(0.9)
                 }
@@ -129,5 +129,5 @@ private struct ProductCard: View {
 // redeclare it here — that caused a duplicate-declaration build error.
 
 #Preview {
-    ProductCatalogView(onSelectProduct: { _ in }, onFindTableForSpace: {})
+    ProductCatalogView(onSelectProduct: { _ in }, onFindForSpace: {})
 }

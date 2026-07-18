@@ -99,76 +99,6 @@ extension UIColor {
 extension MockProduct {
     static let all: [MockProduct] = [
         MockProduct(
-            name: "43\" Smart LED TV",
-            category: "Electronics",
-            priceRupees: 24_999,
-            weightOrSizeLabel: "1 unit",
-            imageSystemName: "tv.fill",
-            tintHex: "1A1A2E",
-            referenceDimensionsCM: (width: 97, height: 58, depth: 8),
-            referenceShape: .box
-        ),
-        MockProduct(
-            name: "Steel Water Bottle 1L",
-            category: "Home & Kitchen",
-            priceRupees: 499,
-            weightOrSizeLabel: "1 L",
-            imageSystemName: "drop.fill",
-            tintHex: "2E86AB",
-            referenceDimensionsCM: (width: 8, height: 27, depth: 8),
-            referenceShape: .cylinder
-        ),
-        MockProduct(
-            name: "Yoga Mat Premium",
-            category: "Fitness",
-            priceRupees: 899,
-            weightOrSizeLabel: "6mm thick",
-            imageSystemName: "figure.yoga",
-            tintHex: "6A4C93",
-            referenceDimensionsCM: (width: 61, height: 0.6, depth: 173),
-            referenceShape: .box
-        ),
-        MockProduct(
-            name: "20L Microwave Oven",
-            category: "Appliances",
-            priceRupees: 8_499,
-            weightOrSizeLabel: "1 unit",
-            imageSystemName: "microwave.fill",
-            tintHex: "F0B429",
-            referenceDimensionsCM: (width: 46, height: 28, depth: 36),
-            referenceShape: .box
-        ),
-        MockProduct(
-            name: "Compact Side Table",
-            category: "Furniture",
-            priceRupees: 1_499,
-            weightOrSizeLabel: "1 unit",
-            imageSystemName: "studentdesk",
-            tintHex: "8D6E63",
-            referenceDimensionsCM: (width: 45, height: 50, depth: 45),
-            referenceShape: .box
-        ),
-        MockProduct(
-            name: "Study Table Medium",
-            category: "Furniture",
-            priceRupees: 3_999,
-            weightOrSizeLabel: "1 unit",
-            imageSystemName: "studentdesk",
-            tintHex: "6D4C41",
-            referenceDimensionsCM: (width: 90, height: 75, depth: 60),
-            referenceShape: .box
-        ),
-        MockProduct(
-            name: "Dining Table Large",
-            category: "Furniture",
-            priceRupees: 12_999,
-            weightOrSizeLabel: "1 unit",
-            imageSystemName: "studentdesk",
-            tintHex: "4E342E",
-            referenceDimensionsCM: (width: 150, height: 75, depth: 90),
-            referenceShape: .box
-        ),
-        MockProduct(
             name: "Portronics My Buddy D Adjustable Laptop Table (Crimson Red)",
             category: "Furniture",
             priceRupees: 1_605,
@@ -227,7 +157,11 @@ extension MockProduct {
         )
     ]
 
-    /// Just the table SKUs — the candidate pool `TableMatcher` picks from.
+    /// Just the table/furniture SKUs. No longer used by the Space Fit flow
+    /// itself (that now searches the whole catalog via ProductIntentResolver
+    /// + ProductSpaceMatcher, so any product type can be requested) — kept
+    /// around as a convenience filter for anything that specifically wants
+    /// furniture only.
     static var tableCatalog: [MockProduct] {
         all.filter { $0.category == "Furniture" }
     }

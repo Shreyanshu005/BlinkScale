@@ -17,6 +17,12 @@ struct CapturedSpacePhoto: Identifiable, Equatable {
     let id = UUID()
     let cgImage: CGImage
 
+    /// Free-text description of what the user is looking for (e.g. "a table
+    /// for my laptop", "something green for this corner", "an air fryer").
+    /// Empty means "anything that fits" — the whole catalog is the candidate
+    /// pool rather than a single product type.
+    var prompt: String = ""
+
     static func == (lhs: CapturedSpacePhoto, rhs: CapturedSpacePhoto) -> Bool {
         lhs.id == rhs.id
     }

@@ -7,12 +7,19 @@
 //  here, unlike AnalysisView — there's no ground truth for an arbitrary
 //  room photo to fall back to, so on failure we just offer a clean retry.
 //
+//  Runs in two phases: first SpaceAnalyzer streams the room-size estimate
+//  (as before), then — once that's done — ProductIntentResolver +
+//  ProductSpaceMatcher run quietly to turn the user's free-text prompt into
+//  a ranked list of real catalog products that actually fit. Both phases
+//  need to finish before `onComplete` fires, since the result screen shows
+//  the estimate AND the matches together.
+//
 
 import SwiftUI
 
 struct SpaceFitAnalyzingView: View {
     let photo: CapturedSpacePhoto
-    let onComplete: (SpaceEstimate) -> Void
+    let onComplete: (SpaceEstimate, [MockProduct]) -> Void
     let onCancel: () -> Void
 
     @State private var partialWidth: Double?
@@ -20,8 +27,10 @@ struct SpaceFitAnalyzingView: View {
     @State private var partialConfidence: DimensionConfidence?
     @State private var partialReasoning: String?
     @State private var errorMessage: String?
+    @State private var isMatchingProducts = false
 
     private let analyzer = SpaceAnalyzer()
+    private let intentResolver = ProductIntentResolver()
 
     private var progress: Double {
         let filled = [partialWidth != nil, partialDepth != nil, partialConfidence != nil, partialReasoning != nil]
@@ -32,8 +41,10 @@ struct SpaceFitAnalyzingView: View {
         VStack(spacing: 28) {
             Spacer()
 
-            Text("Reading your space")
+            Text(isMatchingProducts ? "Finding what fits" : "Reading your space")
                 .font(.title3.weight(.semibold))
+                .contentTransition(.opacity)
+                .animation(.easeOut(duration: 0.2), value: isMatchingProducts)
 
             capturedImagePreview
 
@@ -126,19 +137,30 @@ struct SpaceFitAnalyzingView: View {
                 partialReasoning = partial.reasoning
             }
 
+            let finalEstimate: SpaceEstimate
             if let width = partialWidth, let depth = partialDepth,
                let confidence = partialConfidence, let reasoning = partialReasoning {
-                let finalEstimate = SpaceEstimate(
+                finalEstimate = SpaceEstimate(
                     availableWidthCM: width, availableDepthCM: depth,
                     confidence: confidence, reasoning: reasoning
                 )
-                onComplete(finalEstimate)
             } else {
-                let finalEstimate = try await analyzer.estimateSpace(image: photo.cgImage)
-                onComplete(finalEstimate)
+                finalEstimate = try await analyzer.estimateSpace(image: photo.cgImage)
             }
+
+            await finishMatching(estimate: finalEstimate)
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Second phase: resolve the free-text prompt against the real catalog,
+    /// then keep only the resolved candidates that actually fit the
+    /// estimated space, ranked largest-fit first.
+    private func finishMatching(estimate: SpaceEstimate) async {
+        isMatchingProducts = true
+        let candidates = await intentResolver.resolveMatches(prompt: photo.prompt, catalog: MockProduct.all)
+        let matches = ProductSpaceMatcher.fittingMatches(for: estimate, candidates: candidates)
+        onComplete(estimate, matches)
     }
 }
