@@ -21,66 +21,114 @@ struct AnalysisView: View {
     @State private var partialShape: ProductShape?
     @State private var partialConfidence: DimensionConfidence?
     @State private var errorMessage: String?
+    @State private var scanLineOffset: CGFloat = -1
 
     private let analyzer = DimensionAnalyzer()
 
+    /// Rough progress indicator: each of the 5 fields worth 20%.
+    private var progress: Double {
+        let filled = [partialShape != nil, partialWidth != nil, partialHeight != nil, partialDepth != nil, partialConfidence != nil]
+        return Double(filled.filter { $0 }.count) / 5.0
+    }
+
     var body: some View {
-        ZStack {
-            // The product's own tinted icon, heavily blurred, so the loading
-            // state still feels connected to the item being analyzed instead
-            // of a generic blank screen.
-            Color(UIColor(hex: product.tintHex) ?? .systemGray)
-                .overlay {
-                    Image(systemName: product.imageSystemName)
-                        .font(.system(size: 160))
-                        .foregroundStyle(.white.opacity(0.3))
-                }
-                .blur(radius: 40)
-                .overlay(.black.opacity(0.45))
-                .ignoresSafeArea()
+        VStack(spacing: 28) {
+            Spacer()
 
-            VStack(spacing: 20) {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(.white)
+            Text("Analyzing dimensions")
+                .font(.title3.weight(.semibold))
 
-                Text("Analyzing dimensions…")
-                    .font(.headline)
-                    .foregroundStyle(.white)
+            imageWithScanline
 
-                if let errorMessage {
-                    VStack(spacing: 10) {
-                        Text(errorMessage)
-                            .font(.footnote)
-                            .foregroundStyle(.white.opacity(0.85))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
+            ProgressView(value: progress)
+                .tint(.blinkitOrange)
+                .frame(maxWidth: 260)
 
-                        // Demo-safety net: the on-device model can be briefly
-                        // unavailable (still downloading, guardrail
-                        // rejection, etc.) — never let that dead-end a live
-                        // demo.
-                        Button("Use estimated dimensions instead") {
-                            onComplete(product.fallbackDimensions)
-                        }
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.blinkitOrange)
+            VStack(alignment: .leading, spacing: 10) {
+                fieldRow(label: "Shape", value: partialShape?.displayName)
+                fieldRow(label: "Width", value: partialWidth.map { "\(Int($0)) cm" })
+                fieldRow(label: "Height", value: partialHeight.map { "\(Int($0)) cm" })
+                fieldRow(label: "Depth", value: partialDepth.map { "\(Int($0)) cm" })
+                if let confidence = partialConfidence {
+                    HStack {
+                        Text("Confidence")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        ConfidenceBadge(confidence: confidence)
                     }
-                    .padding(.top, 8)
+                }
+            }
+            .font(.subheadline)
+            .frame(maxWidth: 260)
+
+            if let errorMessage {
+                VStack(spacing: 10) {
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+
+                    // Demo-safety net: the on-device model can be briefly
+                    // unavailable (still downloading, guardrail rejection,
+                    // etc.) — never let that dead-end a live demo.
+                    Button("Use estimated dimensions instead") {
+                        onComplete(product.fallbackDimensions)
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.blinkitOrange)
                 }
             }
 
-            VStack {
-                Spacer()
-                Button("Cancel", action: onCancel)
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(.bottom, 24)
-            }
+            Spacer()
+
+            Button("Cancel", action: onCancel)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
+        .padding()
         .task {
             await runAnalysis()
         }
+    }
+
+    private var imageWithScanline: some View {
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor(hex: product.tintHex) ?? .systemGray).opacity(0.12))
+            Image(systemName: product.imageSystemName)
+                .font(.system(size: 80))
+                .foregroundStyle(Color(UIColor(hex: product.tintHex) ?? .systemGray))
+
+            LinearGradient(colors: [.clear, Color.blinkitOrange.opacity(0.8), .clear], startPoint: .top, endPoint: .bottom)
+                .frame(height: 40)
+                .offset(y: scanLineOffset * 180 + 90)
+                .onAppear {
+                    withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: true)) {
+                        scanLineOffset = 1
+                    }
+                }
+        }
+        .frame(width: 200, height: 200)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private func fieldRow(label: String, value: String?) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(.secondary)
+            Spacer()
+            if let value {
+                Text(value)
+                    .fontWeight(.medium)
+                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+            } else {
+                Text("···")
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: value)
     }
 
     private func runAnalysis() async {

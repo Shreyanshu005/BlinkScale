@@ -32,61 +32,95 @@ struct SpaceFitAnalyzingView: View {
     private let analyzer = SpaceAnalyzer()
     private let intentResolver = ProductIntentResolver()
 
+    private var progress: Double {
+        let filled = [partialWidth != nil, partialDepth != nil, partialConfidence != nil, partialReasoning != nil]
+        return Double(filled.filter { $0 }.count) / 4.0
+    }
+
     var body: some View {
-        ZStack {
-            // The captured photo itself, heavily blurred, so the loading
-            // state still feels connected to what the user just took a
-            // photo of instead of a generic blank screen.
-            Image(decorative: photo.cgImage, scale: 1)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .blur(radius: 40)
-                .overlay(.black.opacity(0.45))
-                .ignoresSafeArea()
+        VStack(spacing: 28) {
+            Spacer()
 
-            VStack(spacing: 20) {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(.white)
+            Text(isMatchingProducts ? "Finding what fits" : "Reading your space")
+                .font(.title3.weight(.semibold))
+                .contentTransition(.opacity)
+                .animation(.easeOut(duration: 0.2), value: isMatchingProducts)
 
-                Text(isMatchingProducts ? "Finding what fits…" : "Reading your space…")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .contentTransition(.opacity)
-                    .animation(.easeOut(duration: 0.2), value: isMatchingProducts)
+            capturedImagePreview
 
-                if let errorMessage {
-                    VStack(spacing: 10) {
-                        Text(errorMessage)
-                            .font(.footnote)
-                            .foregroundStyle(.white.opacity(0.85))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
+            ProgressView(value: progress)
+                .tint(.blinkitOrange)
+                .frame(maxWidth: 260)
 
-                        Button("Try Again") {
-                            self.errorMessage = nil
-                            Task { await runAnalysis() }
-                        }
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.blinkitOrange)
+            VStack(alignment: .leading, spacing: 10) {
+                fieldRow(label: "Width", value: partialWidth.map { "\(Int($0)) cm" })
+                fieldRow(label: "Depth", value: partialDepth.map { "\(Int($0)) cm" })
+                if let confidence = partialConfidence {
+                    HStack {
+                        Text("Confidence")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        ConfidenceBadge(confidence: confidence)
                     }
-                    .padding(.top, 8)
+                }
+            }
+            .font(.subheadline)
+            .frame(maxWidth: 260)
+
+            if let errorMessage {
+                VStack(spacing: 10) {
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+
+                    Button("Try Again") {
+                        self.errorMessage = nil
+                        Task { await runAnalysis() }
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.blinkitOrange)
                 }
             }
 
-            VStack {
-                Spacer()
-                Button("Cancel", action: onCancel)
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(.bottom, 24)
-            }
+            Spacer()
+
+            Button("Cancel", action: onCancel)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
+        .padding()
         .task {
             await runAnalysis()
         }
+    }
+
+    private var capturedImagePreview: some View {
+        Image(decorative: photo.cgImage, scale: 1)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 200, height: 200)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.blinkitOrange, lineWidth: 2))
+            .clipped()
+    }
+
+    @ViewBuilder
+    private func fieldRow(label: String, value: String?) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(.secondary)
+            Spacer()
+            if let value {
+                Text(value)
+                    .fontWeight(.medium)
+            } else {
+                Text("···")
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: value)
     }
 
     private func runAnalysis() async {

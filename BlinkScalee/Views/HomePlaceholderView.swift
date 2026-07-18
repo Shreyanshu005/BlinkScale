@@ -72,9 +72,6 @@ struct HomePlaceholderView: View {
     let onSelectCategory: (HouseholdCategory) -> Void
     let onFindForSpace: () -> Void
 
-    /// Slightly lighter than the app background, used for the curved hero
-    /// region behind the mascot.
-    private let heroTop = Color(red: 32 / 255, green: 34 / 255, blue: 40 / 255)
     private let heroHeight: CGFloat = 220
 
     var body: some View {
@@ -87,31 +84,19 @@ struct HomePlaceholderView: View {
         }
         .background(AppPalette.background)
         .scrollIndicators(.hidden)
-        // `.toolbarBackground(.hidden, for:)` only makes an EXISTING bar's
-        // background transparent — the bar itself still reserves its own
-        // layout space above the content, which is what was actually
-        // blocking the curve from ever reaching the Dynamic Island no
-        // matter how its bleed height was computed. `.toolbar(.hidden, for:)`
-        // removes the bar's presence entirely, reclaiming that space.
         .toolbar(.hidden, for: .navigationBar)
     }
 
+    /// Plain page background behind the mascot — no curved/colored region.
     private var heroSection: some View {
-        // `curveBackground` bleeds upward on its OWN via `.ignoresSafeArea`
-        // — the mascot/scan button live in a SEPARATE, normal-sized layer on
-        // top that respects the safe area like any regular content. Putting
-        // the button's overlay directly on `curveBackground` (as this used
-        // to) anchored it to that view's EXPANDED/bled bounds instead of the
-        // visible area, pushing it up off-screen behind the status bar.
         ZStack(alignment: .bottom) {
-            curveBackground
-
             Image("mascothappy")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 180)
                 .padding(.bottom, 20)
         }
+        .frame(maxWidth: .infinity)
         .frame(height: heroHeight)
         .overlay(alignment: .topTrailing) {
             scanButton
@@ -131,30 +116,6 @@ struct HomePlaceholderView: View {
         .background(Color.blinkitOrange)
         .clipShape(Circle())
         .accessibilityLabel("Scan your space")
-    }
-
-    /// Flat lighter region with a curved "dome" cut into its bottom edge —
-    /// the ellipse (filled with the page's own background) sits mostly below
-    /// the frame, so only its top arc peeks up to form the curve. Overflows
-    /// upward by a generous FIXED amount (well past any real device's
-    /// Dynamic Island/notch inset, ~59pt at most) rather than a precisely
-    /// `GeometryReader`-measured value — that measurement kept getting
-    /// tripped up by other things in this view's hierarchy (the toolbar,
-    /// then the nav bar reservation), so a fixed overflow that's simply
-    /// "big enough" is the more robust choice here.
-    private var curveBackground: some View {
-        ZStack(alignment: .bottom) {
-            heroTop
-
-            Ellipse()
-                .fill(AppPalette.background)
-                .frame(width: 700, height: 140)
-                .offset(y: 90)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: heroHeight + 140, alignment: .bottom)
-        .clipped()
-        .ignoresSafeArea(edges: .top)
     }
 }
 

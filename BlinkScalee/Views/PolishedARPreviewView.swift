@@ -44,28 +44,23 @@ struct PolishedARPreviewView: View {
             )
             .ignoresSafeArea()
 
-            // Gradients alone bleed under the Dynamic Island/home indicator
-            // for a seamless look — the actual text sits in a SEPARATE layer
-            // below that respects the safe area, so it never renders behind
-            // the island itself.
+            // No boxed cards — text floats directly over soft top/bottom
+            // gradient scrims (fading to clear toward the middle) so the
+            // camera feed stays the focus and nothing reads as UI chrome.
             VStack(spacing: 0) {
-                topScrim
+                topScrim.overlay(alignment: .top) { topStatusBar.padding() }
                 Spacer()
-                bottomScrim
-            }
-            .ignoresSafeArea()
-
-            VStack {
-                topStatusBar
-                Spacer()
-                VStack(spacing: 16) {
-                    if coordinator.isPlaced {
-                        infoCard
+                bottomScrim.overlay(alignment: .bottom) {
+                    VStack(spacing: 16) {
+                        if coordinator.isPlaced {
+                            infoCard
+                        }
+                        controlBar
                     }
-                    controlBar
+                    .padding()
                 }
             }
-            .padding()
+            .ignoresSafeArea()
         }
         // Now pushed via NavigationStack (see BlinkitProductPageView) rather
         // than `.fullScreenCover` — hiding the bar keeps the minimal
