@@ -2,10 +2,13 @@
 //  MockProduct.swift
 //  BlinkScalee
 //
-//  Fake Blinkit catalog for the demo. Real product photos aren't needed for
-//  the "aha moment" to land — Foundation Models reasons just fine over an
-//  SF Symbol rendered to a CGImage, and it keeps the app dependency-free
-//  (no bundled JPEGs, no network fetch, nothing that can fail on stage).
+//  Catalog model for the demo. Every entry in `all` below has real supplied
+//  assets (a photo + a converted .usdz) and routes straight to the polished
+//  BlinkitProductPageView + AR Quick Look via `polishedPageContent`. The
+//  `imageSystemName`/`renderedCGImage` machinery below still exists to
+//  support the live-AI flow (ProductDetailView → AnalysisView → ARPreviewView)
+//  for any future product added WITHOUT real assets yet — Foundation Models
+//  reasons fine over an SF Symbol rendered to a CGImage in that path.
 //
 
 import SwiftUI
