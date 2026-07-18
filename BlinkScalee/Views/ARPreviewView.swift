@@ -30,7 +30,7 @@ struct ARPreviewView: View {
 
     var body: some View {
         ZStack {
-            ARViewContainer(dimensions: dimensions, coordinator: coordinator)
+            ARViewContainer(source: .parametric(dimensions), coordinator: coordinator)
                 .ignoresSafeArea()
 
             VStack {

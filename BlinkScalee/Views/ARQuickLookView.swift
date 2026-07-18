@@ -2,11 +2,15 @@
 //  ARQuickLookView.swift
 //  BlinkScalee
 //
-//  Native "View in AR" — wraps QLPreviewController (stable, long-standing
-//  QuickLook API, not the beta FoundationModels/RealityKit surface). Simply
-//  handing QLPreviewController a .usdz file is all that's required for it
-//  to show the system AR badge and drop the model into the user's room —
-//  no custom ARKit session needed for this simpler "product preview" case.
+//  Native "View in AR" via QLPreviewController (stable, long-standing
+//  QuickLook API, not the beta FoundationModels/RealityKit surface).
+//
+//  NOT currently used by BlinkitProductPageView — it switched to
+//  PolishedARPreviewView (custom ARView + ARCoordinator) instead, since
+//  Quick Look offers no way to correct a usdz's baked-in scale and only
+//  the generic system gesture set. Kept here in case a plain, zero-code
+//  system AR viewer is useful again later; `arModelURL` below is still
+//  used by BlinkitProductPageView regardless of which viewer is active.
 //
 
 import SwiftUI

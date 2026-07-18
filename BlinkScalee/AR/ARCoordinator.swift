@@ -4,8 +4,9 @@
 //
 //  Owns the ARSession lifecycle: floor detection, raycast placement, and
 //  post-placement gestures (pinch scale, rotate, long-press re-place).
-//  Published state drives the SwiftUI overlay in ARPreviewView — the view
-//  itself never touches ARKit/RealityKit types directly.
+//  Published state drives the SwiftUI overlay in ARPreviewView/
+//  PolishedARPreviewView — the view itself never touches ARKit/RealityKit
+//  types directly.
 //
 
 import ARKit
@@ -13,18 +14,30 @@ import RealityKit
 import SwiftUI
 import Combine
 
+/// Where the placed entity comes from. `.parametric` is the live-AI path
+/// (a RealityKit primitive sized to an AI-estimated ProductDimensions);
+/// `.usdzModel` is the pre-baked demo path (a real bundled model, scale-
+/// corrected against known real dimensions). One coordinator handles both
+/// so gesture handling, floor scanning, and placement logic aren't
+/// duplicated between the two.
+enum ARContentSource {
+    case parametric(ProductDimensions)
+    case usdzModel(resourceName: String, dimensionsCM: (width: Double, height: Double, depth: Double))
+}
+
 @MainActor
 final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
 
-    // MARK: Published state consumed by ARPreviewView
+    // MARK: Published state consumed by the SwiftUI overlay
 
     @Published var isFloorDetected: Bool = false
     @Published var isPlaced: Bool = false
     @Published var scanningStatusText: String = "Scanning for floor…"
+    @Published var placementErrorMessage: String?
 
     private weak var arView: ARView?
-    private var dimensions: ProductDimensions?
-    private var productEntity: ModelEntity?
+    private var contentSource: ARContentSource?
+    private var productEntity: Entity?
     private var placementIndicator: ModelEntity?
     private var floorAnchor: AnchorEntity?
 
@@ -50,9 +63,9 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
 
     // MARK: Setup
 
-    func setupARView(_ arView: ARView, dimensions: ProductDimensions) {
+    func setupARView(_ arView: ARView, source: ARContentSource) {
         self.arView = arView
-        self.dimensions = dimensions
+        self.contentSource = source
         arView.session.delegate = self
 
         let config = ARWorldTrackingConfiguration()
@@ -121,11 +134,12 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
     }
 
     /// Called after a "Doesn't look right?" refinement returns a new
-    /// estimate. If the object is already placed, rebuild the entity in
-    /// place at the same anchor so the user doesn't have to re-scan or
-    /// re-tap; otherwise just update the dimensions used for the next tap.
+    /// estimate. Only meaningful for the `.parametric` (live-AI) path — the
+    /// usdz path shows a real model, so there's nothing to refine. If the
+    /// object is already placed, rebuild the entity in place at the same
+    /// anchor so the user doesn't have to re-scan or re-tap.
     func updateDimensions(_ newDimensions: ProductDimensions) {
-        dimensions = newDimensions
+        contentSource = .parametric(newDimensions)
         guard isPlaced, let floorAnchor, let newEntity = try? ShapeBuilder.buildProductEntity(from: newDimensions) else { return }
         productEntity?.removeFromParent()
         newEntity.scale = SIMD3<Float>(repeating: currentScale)
@@ -175,16 +189,42 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
     }
 
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        guard !isPlaced, isFloorDetected, let arView, let dimensions else { return }
+        guard !isPlaced, isFloorDetected, let arView else { return }
         let point = gesture.location(in: arView)
-        place(at: point, in: arView, dimensions: dimensions)
+        // Loading a usdz is async (disk read + parse); placement overall
+        // needs to stay async-capable for that case, so both paths route
+        // through the same Task-wrapped call.
+        Task { await place(at: point, in: arView) }
     }
 
-    private func place(at point: CGPoint, in arView: ARView, dimensions: ProductDimensions) {
+    private func place(at point: CGPoint, in arView: ARView) async {
+        guard let contentSource else { return }
         let results = arView.raycast(from: point, allowing: .estimatedPlane, alignment: .horizontal)
         guard let firstResult = results.first else { return }
 
-        guard let entity = try? ShapeBuilder.buildProductEntity(from: dimensions) else { return }
+        // Clear any error from a previous failed attempt — otherwise a
+        // later successful placement would still show the stale error
+        // card in PolishedARPreviewView, since it renders the error over
+        // isPlaced unconditionally.
+        placementErrorMessage = nil
+
+        let entity: Entity
+        do {
+            switch contentSource {
+            case .parametric(let dims):
+                entity = try ShapeBuilder.buildProductEntity(from: dims)
+            case .usdzModel(let name, let dims):
+                entity = try await ShapeBuilder.loadModelEntity(usdzNamed: name, targetDimensionsCM: dims)
+            }
+        } catch {
+            placementErrorMessage = error.localizedDescription
+            return
+        }
+
+        // A raycast/session state change may have arrived while the usdz
+        // was loading (async gap) — bail rather than placing into a stale
+        // or already-placed scene.
+        guard !isPlaced else { return }
 
         let anchor = AnchorEntity(world: firstResult.worldTransform)
         anchor.addChild(entity)
@@ -229,9 +269,9 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
 
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began, let arView else { return }
-        // Lift and re-place: drop the current anchor, go back to indicator mode.
-        // `dimensions` (set in setupARView) is left untouched so the next
-        // tap-to-place uses the same, possibly-refined dimensions.
+        // Lift and re-place: drop the current anchor, go back to indicator
+        // mode. `contentSource` is left untouched so the next tap-to-place
+        // uses the same (possibly-refined, for the parametric path) source.
         if let floorAnchor {
             arView.scene.removeAnchor(floorAnchor)
         }

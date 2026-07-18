@@ -48,6 +48,22 @@ struct BlinkitProductPageContent: Identifiable {
     let priceRupees: Int
     let mrpRupees: Int?
 
+    // MARK: Dimensions
+    /// Real, known dimensions in centimeters — since this content path is
+    /// for products with genuine supplied assets (photo + usdz), these are
+    /// ground truth, not an AI estimate. `nil` hides the dimensions row.
+    var dimensionsCM: (width: Double, height: Double, depth: Double)? = nil
+
+    /// "60 × 75 × 40 cm" formatted for display, matching the style used by
+    /// `ProductDimensions.dimensionLabel` elsewhere in the app.
+    var dimensionsLabel: String? {
+        guard let dimensionsCM else { return nil }
+        let fmt: (Double) -> String = {
+            $0.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", $0) : String(format: "%.1f", $0)
+        }
+        return "\(fmt(dimensionsCM.width)) × \(fmt(dimensionsCM.height)) × \(fmt(dimensionsCM.depth)) cm"
+    }
+
     // MARK: Bank offer
     struct BankOffer {
         let bankInitial: String

@@ -180,6 +180,50 @@ extension MockProduct {
             // Demo-ready: real photo + real .usdz once supplied, routes to
             // BlinkitProductPageView instead of the live-AI flow.
             polishedPageContent: .portronicsLaptopTable
+        ),
+        MockProduct(
+            name: "Rooted Jade Plant with Self-Watering Pot",
+            category: "Plants",
+            priceRupees: 349,
+            weightOrSizeLabel: "1 pc",
+            imageSystemName: "leaf.fill",
+            tintHex: "3E7C4F",
+            referenceDimensionsCM: (width: 9.9, height: 24.9, depth: 9.9),
+            referenceShape: .cylinder,
+            polishedPageContent: .rootedJadePlant
+        ),
+        MockProduct(
+            name: "Ugaoo Lady Valentine Aglaonema Plant",
+            category: "Plants",
+            priceRupees: 369,
+            weightOrSizeLabel: "1 pc",
+            imageSystemName: "leaf.fill",
+            tintHex: "C46B8C",
+            referenceDimensionsCM: (width: 10, height: 20, depth: 10),
+            referenceShape: .cylinder,
+            polishedPageContent: .ugaooLadyValentine
+        ),
+        MockProduct(
+            name: "Nurturing Green ZZ Plant with Self-Watering Pot",
+            category: "Plants",
+            priceRupees: 400,
+            weightOrSizeLabel: "1 pc",
+            imageSystemName: "leaf.fill",
+            tintHex: "2F6B3A",
+            referenceDimensionsCM: (width: 11.4, height: 25.4, depth: 11.4),
+            referenceShape: .cylinder,
+            polishedPageContent: .nurturingGreenZZ
+        ),
+        MockProduct(
+            name: "Solara Air Fryer with See Through Window (4.5 ltr, 1500 W)",
+            category: "Appliances",
+            priceRupees: 3_699,
+            weightOrSizeLabel: "1 unit",
+            imageSystemName: "oven.fill",
+            tintHex: "1A1A1A",
+            referenceDimensionsCM: (width: 30, height: 30.5, depth: 24.5),
+            referenceShape: .box,
+            polishedPageContent: .solaraAirFryer
         )
     ]
 

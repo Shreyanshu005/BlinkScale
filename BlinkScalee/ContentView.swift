@@ -11,6 +11,8 @@
 import SwiftUI
 
 enum AppState: Equatable {
+    case onboarding
+    case home
     case catalog
     case productDetail(MockProduct)
     case analyzing(MockProduct)
@@ -28,11 +30,32 @@ enum AppState: Equatable {
 }
 
 struct ContentView: View {
-    @State private var appState: AppState = .catalog
+    // TEMPORARY for testing the polished product page + AR Quick Look
+    // directly on launch, skipping the catalog. Nothing else was deleted —
+    // set this back to `.catalog` (and revert the #Preview below) once
+    // you're done checking the "View in your room" button.
+    @State private var appState: AppState = .onboarding
 
     var body: some View {
         ZStack {
             switch appState {
+            case .onboarding:
+                OnboardingView(
+                    onNext: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            appState = .home
+                        }
+                    }
+                )
+                .transition(.opacity)
+
+            case .home:
+                HomePlaceholderView()
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+
             case .catalog:
                 ProductCatalogView(
                     onSelectProduct: { product in

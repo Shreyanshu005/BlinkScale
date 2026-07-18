@@ -11,6 +11,17 @@
 import RealityKit
 import UIKit
 
+enum ShapeBuilderError: LocalizedError {
+    case modelNotFound(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .modelNotFound(let name):
+            return "Couldn't find \(name).usdz in the app bundle."
+        }
+    }
+}
+
 enum ShapeBuilder {
 
     /// The main product entity: parametric mesh sized to real-world
@@ -72,5 +83,62 @@ enum ShapeBuilder {
             duration: 0.9,
             timingFunction: .easeInOut
         )
+    }
+
+    /// Loads a bundled `.usdz` and corrects its scale against known
+    /// real-world dimensions. glTF→USDZ pipelines routinely disagree on
+    /// units — USD's convention is 1 unit = 1 meter, but plenty of DCC
+    /// tools/exporters default to centimeters, which comes out 100x too
+    /// big once interpreted as meters. Rather than trust whatever scale the
+    /// file happens to have baked in, this measures the loaded mesh's
+    /// actual bounding box and rescales it to match the product's real
+    /// dimensions exactly — correct regardless of how the source file was
+    /// authored or converted.
+    static func loadModelEntity(
+        usdzNamed name: String,
+        targetDimensionsCM dims: (width: Double, height: Double, depth: Double)
+    ) async throws -> Entity {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "usdz") else {
+            throw ShapeBuilderError.modelNotFound(name)
+        }
+        let entity = try await Entity(contentsOf: url)
+
+        let bounds = entity.visualBounds(relativeTo: nil)
+        let targetWidthM = Float(dims.width) / 100
+        let targetHeightM = Float(dims.height) / 100
+
+        // Correct off whichever measured axis is largest/most reliable —
+        // a thin, flat mesh can have a near-zero extent on one axis.
+        if bounds.extents.x > 0.001 {
+            applyScaleCorrection(to: entity, factor: targetWidthM / bounds.extents.x)
+        } else if bounds.extents.y > 0.001 {
+            applyScaleCorrection(to: entity, factor: targetHeightM / bounds.extents.y)
+        }
+
+        applyGroundingShadowRecursively(to: entity)
+        entity.generateCollisionShapes(recursive: true)
+        entity.components.set(InputTargetComponent())
+
+        return entity
+    }
+
+    private static func applyScaleCorrection(to entity: Entity, factor: Float) {
+        // Sanity bounds so a degenerate/near-zero measured bbox (e.g. a
+        // malformed mesh) can't produce a nonsensical or infinite scale.
+        guard factor.isFinite, factor > 0.001, factor < 1000 else { return }
+        entity.scale = SIMD3<Float>(repeating: factor)
+    }
+
+    /// GroundingShadowComponent has to land on the entity that actually
+    /// carries a ModelComponent (the mesh) — for a loaded .usdz that's
+    /// usually a child several levels into the hierarchy, not the root
+    /// wrapper Entity that `Entity(contentsOf:)` hands back.
+    private static func applyGroundingShadowRecursively(to entity: Entity) {
+        if entity.components[ModelComponent.self] != nil {
+            entity.components.set(GroundingShadowComponent(castsShadow: true))
+        }
+        for child in entity.children {
+            applyGroundingShadowRecursively(to: child)
+        }
     }
 }

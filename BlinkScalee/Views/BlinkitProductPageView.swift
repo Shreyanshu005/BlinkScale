@@ -16,7 +16,7 @@ struct BlinkitProductPageView: View {
     var onAddToCart: () -> Void = {}
 
     @State private var carouselIndex = 0
-    @State private var showARQuickLook = false
+    @State private var showARPreview = false
     @State private var arModelMissingAlert = false
 
     private var tintColor: Color {
@@ -65,16 +65,22 @@ struct BlinkitProductPageView: View {
             bottomBar
         }
         .preferredColorScheme(.dark)
-        .fullScreenCover(isPresented: $showARQuickLook) {
-            if let url = content.arModelURL {
-                ARQuickLookView(modelURL: url)
-                    .ignoresSafeArea()
+        .fullScreenCover(isPresented: $showARPreview) {
+            if let name = content.arModelResourceName, let dims = content.dimensionsCM {
+                PolishedARPreviewView(
+                    productName: content.title,
+                    productImageSystemName: content.imageSystemNames.first ?? "shippingbox.fill",
+                    usdzResourceName: name,
+                    dimensionsCM: dims,
+                    onDone: { showARPreview = false }
+                )
+                .ignoresSafeArea()
             }
         }
-        .alert("3D model not available yet", isPresented: $arModelMissingAlert) {
+        .alert("Can't show this in AR yet", isPresented: $arModelMissingAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Add the .usdz file to the app bundle to enable \"View in your room\" for this product.")
+            Text("Needs both the .usdz file added to the app bundle and dimensionsCM set on this content to display correctly.")
         }
     }
 
@@ -85,8 +91,8 @@ struct BlinkitProductPageView: View {
     private var viewInRoomButton: some View {
         if content.arModelResourceName != nil {
             Button {
-                if content.arModelURL != nil {
-                    showARQuickLook = true
+                if content.arModelURL != nil && content.dimensionsCM != nil {
+                    showARPreview = true
                 } else {
                     arModelMissingAlert = true
                 }
@@ -234,6 +240,10 @@ struct BlinkitProductPageView: View {
 
             quantityStockRow
 
+            if let dimensionsLabel = content.dimensionsLabel {
+                dimensionsRow(dimensionsLabel)
+            }
+
             priceRow
 
             if let bankOffer = content.bankOffer {
@@ -312,6 +322,18 @@ struct BlinkitProductPageView: View {
                     .foregroundStyle(Palette.stockAmber)
                     .fontWeight(.semibold)
             }
+        }
+        .font(.subheadline)
+    }
+
+    /// Real-world W × H × D — shown as ground truth (not an AI guess) since
+    /// this page only exists for products with genuine supplied assets.
+    private func dimensionsRow(_ label: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "ruler.fill")
+                .foregroundStyle(.white.opacity(0.7))
+            Text(label)
+                .foregroundStyle(.white.opacity(0.8))
         }
         .font(.subheadline)
     }

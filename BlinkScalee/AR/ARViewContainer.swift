@@ -12,7 +12,7 @@ import RealityKit
 import ARKit
 
 struct ARViewContainer: UIViewRepresentable {
-    let dimensions: ProductDimensions
+    let source: ARContentSource
     @ObservedObject var coordinator: ARCoordinator
 
     /// Without this, SwiftUI can't infer `Coordinator == ARCoordinator` and
@@ -25,7 +25,7 @@ struct ARViewContainer: UIViewRepresentable {
 
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
-        coordinator.setupARView(arView, dimensions: dimensions)
+        coordinator.setupARView(arView, source: source)
         return arView
     }
 
