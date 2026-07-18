@@ -18,7 +18,14 @@ struct SpaceFitResultView: View {
     let onDone: () -> Void
     let onRetry: () -> Void
 
+    private let columnGap: CGFloat = 12
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
+    // Measured off the grid's own ACTUAL proposed width at render time —
+    // `UIScreen.main.bounds.width` turned out to be unreliable in some
+    // environments (returned a value that made cards render wider than the
+    // real screen), so this reads the real, current width directly instead.
+    @State private var cardWidth: CGFloat?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -36,12 +43,14 @@ struct SpaceFitResultView: View {
                 }
                 .padding()
             }
+            .background(AppPalette.background)
 
             Button("Try Another Photo", action: onRetry)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color.blinkitOrange)
                 .padding(.bottom)
         }
+        .preferredColorScheme(.dark)
     }
 
     private var header: some View {
@@ -90,15 +99,20 @@ struct SpaceFitResultView: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color.blinkitOrange)
 
-            LazyVGrid(columns: columns, spacing: 12) {
+            LazyVGrid(columns: columns, spacing: columnGap) {
                 ForEach(matches) { product in
-                    Button {
-                        onSelectProduct(product)
-                    } label: {
-                        MatchCard(product: product, isTopPick: product.id == matches.first?.id)
-                    }
-                    .buttonStyle(.plain)
+                    ProductCard(
+                        product: product,
+                        badge: product.id == matches.first?.id ? .bestFit : nil,
+                        width: cardWidth,
+                        onSelect: { onSelectProduct(product) }
+                    )
                 }
+            }
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                (proxy.size.width - columnGap) / 2
+            } action: { newValue in
+                cardWidth = newValue
             }
         }
     }
@@ -117,53 +131,7 @@ struct SpaceFitResultView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-}
-
-private struct MatchCard: View {
-    let product: MockProduct
-    let isTopPick: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ZStack(alignment: .topTrailing) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(UIColor(hex: product.tintHex) ?? .systemGray).opacity(0.12))
-                Image(systemName: product.imageSystemName)
-                    .font(.system(size: 36))
-                    .foregroundStyle(Color(UIColor(hex: product.tintHex) ?? .systemGray))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                if isTopPick {
-                    Text("BEST FIT")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.blinkitOrange)
-                        .clipShape(Capsule())
-                        .padding(6)
-                }
-            }
-            .frame(height: 90)
-
-            Text(product.name)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(2)
-                .foregroundStyle(.primary)
-
-            Text("\(Int(product.referenceDimensionsCM.width)) × \(Int(product.referenceDimensionsCM.depth)) cm")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text("₹\(product.priceRupees)")
-                .font(.subheadline.weight(.bold))
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppPalette.background.opacity(0.72))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

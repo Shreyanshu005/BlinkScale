@@ -173,4 +173,220 @@ extension BlinkitProductPageContent {
         cartItemCount: 0,
         arModelResourceName: "airfryer"
     )
+
+    // MARK: - FunBlast Chair Cover (chair.usdz)
+    // Size 19" × 26" × 18". ₹699, MRP ₹1,499 (53% off). Pack of 2.
+    static let funBlastChairCover = BlinkitProductPageContent(
+        imageAssetNames: ["chair"],
+        imageSystemNames: Array(repeating: "sofa.fill", count: 3),
+        imageTintHex: "6F4E37",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Coffee"),
+            VariantOption(label: "Material", value: "Velvet")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "19 mins",
+        rating: 4.5,
+        reviewCount: 176,
+        title: "FunBlast Premium Velvet Dining Chair Cover (Coffee) - Pack of 2",
+        quantityLabel: "2 pcs",
+        stockLeftLabel: nil,
+        priceRupees: 699,
+        mrpRupees: 1_499,
+        dimensionsCM: (width: 48.3, height: 66.0, depth: 45.7),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "FunBlast",
+            subtitle: "Explore all products",
+            iconSystemName: "sofa.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "chair"
+    )
+
+    // MARK: - Decathlon Quechua Folding Camping Chair (chair2.usdz)
+    // Folded size 82 × 17.5 × 17.5 cm. ₹1,799, MRP ₹1,999 (10% off).
+    static let decathlonQuechuaChair = BlinkitProductPageContent(
+        imageAssetNames: ["chair2"],
+        imageSystemNames: Array(repeating: "sofa.fill", count: 3),
+        imageTintHex: "2A6FB5",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Blue"),
+            VariantOption(label: "Speciality", value: "Foldable")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "22 mins",
+        rating: 4.5,
+        reviewCount: 231,
+        title: "Decathlon Quechua Folding Camping Chair (Blue)",
+        quantityLabel: "1 pc",
+        stockLeftLabel: nil,
+        priceRupees: 1_799,
+        mrpRupees: 1_999,
+        dimensionsCM: (width: 82, height: 17.5, depth: 17.5),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "Decathlon",
+            subtitle: "Explore all products",
+            iconSystemName: "sofa.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "chair2"
+    )
+
+    // MARK: - Real Wood Wall Clock (clock.usdz)
+    // Colour Mahogany. ₹1,299, MRP ₹2,599 (50% off). Sold by Bianca Home LLP.
+    static let realWoodWallClock = BlinkitProductPageContent(
+        imageAssetNames: ["clock"],
+        imageSystemNames: Array(repeating: "clock.fill", count: 3),
+        imageTintHex: "6F2C1E",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Mahogany"),
+            VariantOption(label: "Material", value: "Wood")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "16 mins",
+        rating: 4.5,
+        reviewCount: 143,
+        title: "Real Wood Wall Clock (Mahogany)",
+        quantityLabel: "1 pc",
+        stockLeftLabel: nil,
+        priceRupees: 1_299,
+        mrpRupees: 2_599,
+        dimensionsCM: (width: 30, height: 30, depth: 5),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "Bianca Home",
+            subtitle: "Explore all products",
+            iconSystemName: "clock.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "clock",
+        requiredSurface: .wall
+    )
+
+    // MARK: - Home Sizzler Blackout Door Curtain (curtain.usdz)
+    // Size 48" × 84". ₹499, MRP ₹999 (50% off).
+    static let homeSizzlerCurtain = BlinkitProductPageContent(
+        imageAssetNames: ["curtain"],
+        imageSystemNames: Array(repeating: "rectangle.fill", count: 3),
+        imageTintHex: "5C3A21",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Brown"),
+            VariantOption(label: "Curtain Type", value: "Blackout")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "11 mins",
+        rating: 4.5,
+        reviewCount: 267,
+        title: "Home Sizzler Blackout Door Curtain (Brown, 48x84 inch)",
+        quantityLabel: "1 pc",
+        stockLeftLabel: nil,
+        priceRupees: 499,
+        mrpRupees: 999,
+        dimensionsCM: (width: 121.9, height: 213.4, depth: 2),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "Home Sizzler",
+            subtitle: "Explore all products",
+            iconSystemName: "rectangle.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "curtain",
+        requiredSurface: .wall
+    )
+
+    // MARK: - Ganesha Deepak Brass Wall Hanging (hanger.usdz)
+    // Size 4.5" × 3" × 9". ₹824, MRP ₹1,999 (58% off).
+    static let ganeshaDeepakHanger = BlinkitProductPageContent(
+        imageAssetNames: ["hanger"],
+        imageSystemNames: Array(repeating: "bell.fill", count: 3),
+        imageTintHex: "D4AF37",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Golden"),
+            VariantOption(label: "Material", value: "Brass")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "9 mins",
+        rating: 4.5,
+        reviewCount: 198,
+        title: "Ganesha Deepak Brass Wall Hanging with Bell (Golden)",
+        quantityLabel: "1 pc",
+        stockLeftLabel: nil,
+        priceRupees: 824,
+        mrpRupees: 1_999,
+        dimensionsCM: (width: 11.4, height: 22.9, depth: 7.6),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "Bianca Home",
+            subtitle: "Explore all products",
+            iconSystemName: "bell.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "hanger",
+        requiredSurface: .wall
+    )
+
+    // MARK: - Mahal Karigari Ceramic Wall Plate (walldecor2.usdz)
+    // Breadth/Length 20 cm (without packaging). ₹815, MRP ₹1,295 (37% off).
+    static let mahalKarigariWallPlate = BlinkitProductPageContent(
+        imageAssetNames: ["walldecor2"],
+        imageSystemNames: Array(repeating: "circle.fill", count: 3),
+        imageTintHex: "D96C3F",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Multicolour"),
+            VariantOption(label: "Material", value: "Ceramic")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "13 mins",
+        rating: 4.5,
+        reviewCount: 154,
+        title: "Mahal Karigari Ceramic Wall Plate (Multicolour)",
+        quantityLabel: "1 pc",
+        stockLeftLabel: nil,
+        priceRupees: 815,
+        mrpRupees: 1_295,
+        dimensionsCM: (width: 20, height: 20, depth: 2),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "Chumbak",
+            subtitle: "Explore all products",
+            iconSystemName: "circle.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "walldecor2",
+        requiredSurface: .wall
+    )
+
+    // MARK: - Owl Pyrite Stone by Astrotalk (walldecor3.usdz)
+    // Dimensions 7 × 7 × 8 cm. ₹999, MRP ₹1,700 (41% off). Tabletop showpiece
+    // (despite the "walldecor" asset name) — sits on a shelf/table, so it
+    // uses `.floor` like the rest of the catalog's non-wall items.
+    static let owlPyriteStone = BlinkitProductPageContent(
+        imageAssetNames: ["walldecor3"],
+        imageSystemNames: Array(repeating: "diamond.fill", count: 3),
+        imageTintHex: "6E6E6E",
+        variantOptions: [
+            VariantOption(label: "Colour", value: "Metallic Gray"),
+            VariantOption(label: "Material", value: "Pyrite, Resin")
+        ],
+        viewDetailsLabel: "View details",
+        deliveryTimeLabel: "17 mins",
+        rating: 4.5,
+        reviewCount: 112,
+        title: "Owl Pyrite Stone by Astrotalk",
+        quantityLabel: "1 pc",
+        stockLeftLabel: nil,
+        priceRupees: 999,
+        mrpRupees: 1_700,
+        dimensionsCM: (width: 7, height: 8, depth: 7),
+        bankOffer: nil,
+        brand: BrandInfo(
+            name: "Astrotalk",
+            subtitle: "Explore all products",
+            iconSystemName: "diamond.fill"
+        ),
+        cartItemCount: 0,
+        arModelResourceName: "walldecor3"
+    )
 }

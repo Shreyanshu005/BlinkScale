@@ -96,7 +96,8 @@ enum ShapeBuilder {
     /// authored or converted.
     static func loadModelEntity(
         usdzNamed name: String,
-        targetDimensionsCM dims: (width: Double, height: Double, depth: Double)
+        targetDimensionsCM dims: (width: Double, height: Double, depth: Double),
+        rotationDegrees: (pitchX: Double, yawY: Double, rollZ: Double) = (0, 0, 0)
     ) async throws -> Entity {
         guard let url = Bundle.main.url(forResource: name, withExtension: "usdz") else {
             throw ShapeBuilderError.modelNotFound(name)
@@ -113,6 +114,15 @@ enum ShapeBuilder {
             applyScaleCorrection(to: entity, factor: targetWidthM / bounds.extents.x)
         } else if bounds.extents.y > 0.001 {
             applyScaleCorrection(to: entity, factor: targetHeightM / bounds.extents.y)
+        }
+
+        // Manual orientation fix — see `BlinkitProductPageContent.arModelRotationDegrees`
+        // for why this is ever needed (export pipelines disagreeing on "up").
+        if rotationDegrees != (0, 0, 0) {
+            let pitch = simd_quatf(angle: Float(rotationDegrees.pitchX) * .pi / 180, axis: [1, 0, 0])
+            let yaw = simd_quatf(angle: Float(rotationDegrees.yawY) * .pi / 180, axis: [0, 1, 0])
+            let roll = simd_quatf(angle: Float(rotationDegrees.rollZ) * .pi / 180, axis: [0, 0, 1])
+            entity.transform.rotation = yaw * pitch * roll
         }
 
         applyGroundingShadowRecursively(to: entity)

@@ -92,6 +92,25 @@ struct BlinkitProductPageContent: Identifiable {
     /// yet just doesn't get one. Defaults to `nil` so existing content
     /// doesn't need updating.
     var arModelResourceName: String? = nil
+
+    /// Which real-world surface this item goes against in AR — same value
+    /// as the originating `MockProduct.requiredSurface`, kept in sync
+    /// manually like `dimensionsCM` above. Threaded through to
+    /// `PolishedARPreviewView` so the AR flow can warn (rather than
+    /// mis-place) if the user points at the wrong kind of surface.
+    var requiredSurface: PlacementSurface = .floor
+
+    /// Manual per-model orientation fix, in degrees around each local axis
+    /// (X = pitch, Y = yaw, Z = roll), applied once after the usdz loads.
+    /// Needed because usdz export pipelines don't agree on "up" — RealityKit/
+    /// USD convention is Y-up, but a model converted through a tool that
+    /// defaults to Z-up (common with Blender-originated meshes, for example)
+    /// comes in tipped over even though its scale is correct. `(0, 0, 0)`
+    /// (the default) applies no correction. Only set this once you've seen a
+    /// specific model rotated wrong in AR and know which way to counter it —
+    /// e.g. `(pitchX: -90, yawY: 0, rollZ: 0)` is the standard fix for a
+    /// Z-up mesh lying on its back.
+    var arModelRotationDegrees: (pitchX: Double, yawY: Double, rollZ: Double) = (0, 0, 0)
 }
 
 // Identity equality (matches the pattern used by MockProduct and

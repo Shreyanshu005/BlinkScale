@@ -18,6 +18,8 @@ struct PolishedARPreviewView: View {
     let productImageSystemName: String
     let usdzResourceName: String
     let dimensionsCM: (width: Double, height: Double, depth: Double)
+    var requiredSurface: PlacementSurface = .floor
+    var rotationDegrees: (pitchX: Double, yawY: Double, rollZ: Double) = (0, 0, 0)
     let onDone: () -> Void
 
     @StateObject private var coordinator = ARCoordinator()
@@ -32,23 +34,65 @@ struct PolishedARPreviewView: View {
     var body: some View {
         ZStack {
             ARViewContainer(
-                source: .usdzModel(resourceName: usdzResourceName, dimensionsCM: dimensionsCM),
+                source: .usdzModel(
+                    resourceName: usdzResourceName,
+                    dimensionsCM: dimensionsCM,
+                    requiredSurface: requiredSurface,
+                    rotationDegrees: rotationDegrees
+                ),
                 coordinator: coordinator
             )
+            .ignoresSafeArea()
+
+            // Gradients alone bleed under the Dynamic Island/home indicator
+            // for a seamless look — the actual text sits in a SEPARATE layer
+            // below that respects the safe area, so it never renders behind
+            // the island itself.
+            VStack(spacing: 0) {
+                topScrim
+                Spacer()
+                bottomScrim
+            }
             .ignoresSafeArea()
 
             VStack {
                 topStatusBar
                 Spacer()
-                if let errorMessage = coordinator.placementErrorMessage {
-                    errorCard(errorMessage)
-                } else if coordinator.isPlaced {
-                    infoCard
+                VStack(spacing: 16) {
+                    if coordinator.isPlaced {
+                        infoCard
+                    }
+                    controlBar
                 }
-                controlBar
             }
             .padding()
         }
+        // Now pushed via NavigationStack (see BlinkitProductPageView) rather
+        // than `.fullScreenCover` — hiding the bar keeps the minimal
+        // gradient look with no boxed nav chrome, but the interactive
+        // edge-swipe-to-pop gesture is driven by the navigation controller
+        // itself, independent of the bar's own visibility, so it still
+        // works here for free alongside the visible back button below.
+        .toolbar(.hidden, for: .navigationBar)
+        // This screen used to be presented via `.fullScreenCover` — a
+        // separate UIKit presentation layer that sits on top of everything
+        // below it, including ContentView's root-level `.toastHost()`. Now
+        // that it's pushed via NavigationStack it's arguably no longer
+        // strictly necessary, but keeping a local host here is harmless and
+        // future-proofs against this view ever being presented modally again.
+        .toastHost()
+    }
+
+    private var topScrim: some View {
+        LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+            .frame(height: 150)
+            .allowsHitTesting(false)
+    }
+
+    private var bottomScrim: some View {
+        LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+            .frame(height: 220)
+            .allowsHitTesting(false)
     }
 
     private var topStatusBar: some View {
@@ -59,14 +103,12 @@ struct PolishedARPreviewView: View {
                 .fontWeight(.medium)
             Spacer()
             Button(action: onDone) {
-                Image(systemName: "xmark.circle.fill")
+                Image(systemName: "chevron.backward.circle.fill")
                     .font(.title2)
             }
         }
         .foregroundStyle(.white)
-        .padding()
-        .background(.black.opacity(0.35))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.5), radius: 6)
     }
 
     private var infoCard: some View {
@@ -82,34 +124,23 @@ struct PolishedARPreviewView: View {
                 .font(.title3.weight(.bold))
             Label("Walk around it", systemImage: "figure.walk")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.7))
         }
-        .padding()
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-
-    private func errorCard(_ message: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
-            Text(message)
-                .font(.footnote)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .foregroundStyle(.white)
+        .shadow(color: .black.opacity(0.5), radius: 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var controlBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             controlPill(icon: "rotate.3d", label: "Twist to rotate")
             controlPill(icon: "hand.tap.fill", label: "Hold to re-place")
         }
         .font(.caption)
-        .foregroundStyle(.white)
+        .foregroundStyle(.white.opacity(0.9))
+        .shadow(color: .black.opacity(0.5), radius: 4)
         .opacity(coordinator.isPlaced ? 1 : 0)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func controlPill(icon: String, label: String) -> some View {
@@ -117,9 +148,5 @@ struct PolishedARPreviewView: View {
             Image(systemName: icon)
             Text(label)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.black.opacity(0.35))
-        .clipShape(Capsule())
     }
 }

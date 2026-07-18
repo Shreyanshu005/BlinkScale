@@ -2,132 +2,49 @@
 //  ProductCatalogView.swift
 //  BlinkScalee
 //
-//  The familiar Blinkit-style grid — deliberately unremarkable, because the
-//  "wow" of this app should land on ProductDetailView's CTA and the AR
-//  screen, not here. This screen just needs to feel like an app the judge
-//  already recognizes.
+//  Category tab: products grouped under a heading per category (Furniture,
+//  Plants, Appliances, ...), each rendered with the shared ProductCard.
+//  Grouping is derived from MockProduct.category at render time, so dropping
+//  more products (or a brand-new category) into MockProduct.all is all it
+//  takes to show up here — no changes needed in this file.
 //
 
 import SwiftUI
 
 struct ProductCatalogView: View {
     let onSelectProduct: (MockProduct) -> Void
-    let onFindForSpace: () -> Void
 
-    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    /// Categories in first-seen order from the catalog, each paired with its products.
+    private var categorySections: [(category: String, products: [MockProduct])] {
+        var order: [String] = []
+        var grouped: [String: [MockProduct]] = [:]
+        for product in MockProduct.all {
+            if grouped[product.category] == nil {
+                order.append(product.category)
+            }
+            grouped[product.category, default: []].append(product)
+        }
+        return order.map { ($0, grouped[$0] ?? []) }
+    }
 
     var body: some View {
-        VStack(spacing: 0) {
-            topBar
-
-            ScrollView {
-                VStack(spacing: 16) {
-                    findTableBanner
-
-                    LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(MockProduct.all) { product in
-                            Button {
-                                onSelectProduct(product)
-                            } label: {
-                                ProductCard(product: product)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                ForEach(categorySections, id: \.category) { section in
+                    CategoryProductsSection(
+                        title: section.category,
+                        products: section.products,
+                        onSelectProduct: onSelectProduct
+                    )
                 }
-                .padding(16)
             }
-            .background(AppPalette.background)
+            .padding(.vertical, 16)
         }
-    }
-
-    private var findTableBanner: some View {
-        Button(action: onFindForSpace) {
-            HStack(spacing: 12) {
-                Image(systemName: "camera.viewfinder")
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Not sure what fits your space?")
-                        .font(.subheadline.weight(.semibold))
-                    Text("Snap a photo and tell us what you're after — we'll match products to it")
-                        .font(.caption)
-                        .opacity(0.9)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-            }
-            .foregroundStyle(.white)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.blinkitOrange)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var topBar: some View {
-        HStack(spacing: 8) {
-            Text("Blink")
-                .fontWeight(.heavy) +
-            Text("Scalee")
-                .fontWeight(.heavy)
-                .foregroundStyle(Color.blinkitOrange)
-
-            Spacer()
-
-            Image(systemName: "location.fill")
-                .foregroundStyle(Color.blinkitOrange)
-            Text("Delivery in 9 mins")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-        .font(.title2)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
         .background(AppPalette.background)
+        .preferredColorScheme(.dark)
     }
 }
-
-private struct ProductCard: View {
-    let product: MockProduct
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(UIColor(hex: product.tintHex) ?? .systemGray).opacity(0.12))
-                Image(systemName: product.imageSystemName)
-                    .font(.system(size: 44))
-                    .foregroundStyle(Color(UIColor(hex: product.tintHex) ?? .systemGray))
-            }
-            .frame(height: 110)
-
-            Text(product.category.uppercased())
-                .font(.caption2)
-                .foregroundStyle(.white.opacity(0.6))
-
-            Text(product.name)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(2)
-                .foregroundStyle(.white)
-
-            Text(product.weightOrSizeLabel)
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.6))
-
-            Text("₹\(product.priceRupees)")
-                .font(.subheadline.weight(.bold))
-        }
-        .padding(10)
-        .background(AppPalette.background.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-}
-
-// Color.blinkitOrange is auto-generated by Xcode from the "BlinkitOrange"
-// color set in Assets.xcassets (Xcode's asset-symbol generation). Do not
-// redeclare it here — that caused a duplicate-declaration build error.
 
 #Preview {
-    ProductCatalogView(onSelectProduct: { _ in }, onFindForSpace: {})
+    ProductCatalogView(onSelectProduct: { _ in })
 }

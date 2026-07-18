@@ -32,7 +32,6 @@ enum AppState: Equatable {
 enum AppTab: Hashable {
     case home
     case category
-    case profile
     case search
 }
 
@@ -63,15 +62,6 @@ struct ContentView: View {
             case .home:
                 AppTabContainer(
                     selectedTab: $selectedTab,
-                    onSelectProduct: { product in
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            if let polished = product.polishedPageContent {
-                                appState = .polishedProductPage(polished)
-                            } else {
-                                appState = .productDetail(product)
-                            }
-                        }
-                    },
                     onFindForSpace: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             appState = .spaceFitCapture
@@ -95,11 +85,6 @@ struct ContentView: View {
                             } else {
                                 appState = .productDetail(product)
                             }
-                        }
-                    },
-                    onFindForSpace: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .spaceFitCapture
                         }
                     }
                 )
@@ -230,6 +215,7 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .toastHost()
     }
 
     private func showCategory() {

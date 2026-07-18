@@ -14,6 +14,14 @@ struct BlinkitProductPageView: View {
     let content: BlinkitProductPageContent
     var onBack: () -> Void = {}
     var onAddToCart: () -> Void = {}
+    /// `false` when this page is pushed via a real `NavigationStack` (see
+    /// `ProductPageDestination`) — that already provides a native
+    /// interactive-pop edge-swipe gesture, so the hand-rolled one below
+    /// would just be a redundant, competing gesture recognizer over the
+    /// same screen region. Defaults to `true` for the older call sites
+    /// (ContentView's custom state-machine transitions) that have no
+    /// NavigationStack to provide that gesture natively.
+    var showsCustomBackGesture: Bool = true
 
     @State private var carouselIndex = 0
     @State private var showARPreview = false
@@ -38,42 +46,56 @@ struct BlinkitProductPageView: View {
         static let hairline = Color.white.opacity(0.08)
     }
 
-    /// Matches the reference's "₹1,605" / "MRP ₹2,999" comma-grouped style —
-    /// plain string interpolation on an Int silently drops the separator.
+    /// Matches the reference's "₹1,605" / "MRP ₹2,999" comma-grouped style.
     private func currency(_ amount: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return "₹" + (formatter.string(from: NSNumber(value: amount)) ?? "\(amount)")
+        amount.asRupeeLabel
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Palette.background.ignoresSafeArea()
+        // Nested NavigationStack, scoped just to this page's own AR
+        // sub-navigation — works the same regardless of whether THIS page
+        // itself is pushed onto an outer tab NavigationStack or shown via
+        // ContentView's older state machine (Space Fit flow). Replaces the
+        // old `.fullScreenCover` presentation, which had no back button and
+        // no swipe-to-dismiss of its own.
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                Palette.background.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    imageCarousel
-                    paginationDots
-                    viewInRoomButton
-                    variantRow
-                    detailsSection
+                ScrollView {
+                    VStack(spacing: 0) {
+                        imageCarousel
+                        paginationDots
+                        viewInRoomButton
+                        variantRow
+                        detailsSection
+                    }
+                }
+
+                bottomBar
+            }
+            .overlay(alignment: .leading) {
+                if showsCustomBackGesture {
+                    edgeSwipeBackZone
                 }
             }
-
-            bottomBar
-        }
-        .preferredColorScheme(.dark)
-        .fullScreenCover(isPresented: $showARPreview) {
-            if let name = content.arModelResourceName, let dims = content.dimensionsCM {
-                PolishedARPreviewView(
-                    productName: content.title,
-                    productImageSystemName: content.imageSystemNames.first ?? "shippingbox.fill",
-                    usdzResourceName: name,
-                    dimensionsCM: dims,
-                    onDone: { showARPreview = false }
-                )
+            .preferredColorScheme(.dark)
+            // This page draws its own back/share/wishlist controls over the
+            // image carousel — a system nav bar on top would just be a
+            // second, redundant title bar.
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(isPresented: $showARPreview) {
+                if let name = content.arModelResourceName, let dims = content.dimensionsCM {
+                    PolishedARPreviewView(
+                        productName: content.title,
+                        productImageSystemName: content.imageSystemNames.first ?? "shippingbox.fill",
+                        usdzResourceName: name,
+                        dimensionsCM: dims,
+                        requiredSurface: content.requiredSurface,
+                        rotationDegrees: content.arModelRotationDegrees,
+                        onDone: { showARPreview = false }
+                    )
+                }
             }
         }
         .alert("Can't show this in AR yet", isPresented: $arModelMissingAlert) {
@@ -81,6 +103,30 @@ struct BlinkitProductPageView: View {
         } message: {
             Text("Needs both the .usdz file added to the app bundle and dimensionsCM set on this content to display correctly.")
         }
+    }
+
+    /// Invisible strip pinned to the left edge (like iOS's native
+    /// interactive-pop back-swipe zone), full height, so a swipe-to-go-back
+    /// gesture works even though this app has no NavigationStack driving the
+    /// transition. Deliberately kept to a narrow edge hot zone rather than a
+    /// gesture on the whole page — the image carousel above and the
+    /// ScrollView underneath both need their own horizontal/vertical pans to
+    /// keep working undisturbed everywhere else on the page.
+    private var edgeSwipeBackZone: some View {
+        Color.clear
+            .frame(width: 24)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 12)
+                    .onEnded { value in
+                        let horizontal = value.translation.width
+                        let vertical = value.translation.height
+                        if horizontal > 60 && abs(vertical) < 120 {
+                            onBack()
+                        }
+                    }
+            )
+            .ignoresSafeArea()
     }
 
     /// Sits right under the carousel per the request to put the AR entry
@@ -173,9 +219,8 @@ struct BlinkitProductPageView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
-                .background(Color.black.opacity(0.4))
-                .clipShape(Circle())
         }
+        .glassEffect(.regular.interactive(), in: Circle())
     }
 
     private var paginationDots: some View {

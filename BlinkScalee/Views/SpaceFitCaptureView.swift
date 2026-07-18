@@ -2,13 +2,13 @@
 //  SpaceFitCaptureView.swift
 //  BlinkScalee
 //
-//  Entry point for "Find something that fits my space." Collects two
-//  things before the AI ever runs: a free-text prompt for what the user
-//  wants (any product in the catalog, not just tables — ProductIntentResolver
-//  interprets it later) and a photo of the empty spot. Coaches the user to
-//  include a reference object in frame — since SpaceAnalyzer has no stated
-//  measurement to anchor on, the quality of this photo directly determines
-//  how good the estimate can be.
+//  Entry point for "Find something that fits my space." Opens the camera
+//  immediately on appear — no intro screen in between — then, once a photo
+//  is captured, asks the one thing left: a free-text prompt for what the
+//  user wants (any product in the catalog, not just tables —
+//  ProductIntentResolver interprets it later). Coaches the user (in that
+//  second step) to have included a reference object in frame, since
+//  SpaceAnalyzer has no stated measurement to anchor on.
 //
 
 import SwiftUI
@@ -18,49 +18,82 @@ struct SpaceFitCaptureView: View {
     let onCancel: () -> Void
     let onPhotoCaptured: (CapturedSpacePhoto) -> Void
 
+    /// Wraps *which* source to open together with *whether* to open it, as a
+    /// single Identifiable value — see the historical note this file used to
+    /// carry: two independent `@State` vars (a bool and an enum) raced on
+    /// real devices, `.sheet(item:)` doesn't have that gap.
+    private struct PickerRequest: Identifiable {
+        let id = UUID()
+        let source: UIImagePickerController.SourceType
+    }
+
+    @State private var pickerRequest: PickerRequest? = PickerRequest(
+        source: UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
+    )
+    @State private var capturedImage: CGImage?
     @State private var prompt: String = ""
-    @State private var showPicker = false
-    @State private var pickerSource: UIImagePickerController.SourceType = .photoLibrary
     @FocusState private var promptFocused: Bool
 
     var body: some View {
+        Group {
+            if let capturedImage {
+                promptStep(image: capturedImage)
+            } else {
+                // Camera sheet is presented immediately on appear (see the
+                // initial `pickerRequest` value above) — nothing to show
+                // behind it.
+                AppPalette.background.ignoresSafeArea()
+            }
+        }
+        .sheet(item: $pickerRequest) { request in
+            ImagePicker(
+                sourceType: request.source,
+                onImagePicked: { cgImage in
+                    pickerRequest = nil
+                    capturedImage = cgImage
+                },
+                onCancel: {
+                    pickerRequest = nil
+                    // No photo yet and the picker was dismissed — nothing
+                    // left to show, so back out of the flow entirely.
+                    if capturedImage == nil {
+                        onCancel()
+                    }
+                }
+            )
+        }
+    }
+
+    private func promptStep(image: CGImage) -> some View {
         VStack(spacing: 24) {
             header
 
             Spacer()
 
-            Image(systemName: "camera.viewfinder")
-                .font(.system(size: 64))
-                .foregroundStyle(Color.blinkitOrange)
-
-            Text("Find something that fits your space")
-                .font(.title2.weight(.bold))
-                .multilineTextAlignment(.center)
-
-            Text("Take a photo of the empty spot. Include a doorway, floor tile, or piece of furniture in frame — it gives the AI something to judge scale against.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+            Image(decorative: image, scale: 1)
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 260)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .padding(.horizontal, 24)
 
             promptField
 
             Spacer()
 
-            actionButtons
+            Button {
+                onPhotoCaptured(CapturedSpacePhoto(cgImage: image, prompt: prompt))
+            } label: {
+                Text("Find matches")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .glassEffect(.regular.tint(Color.blinkitOrange).interactive(), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.horizontal)
+            .padding(.bottom)
         }
-        .sheet(isPresented: $showPicker) {
-            ImagePicker(
-                sourceType: pickerSource,
-                onImagePicked: { cgImage in
-                    showPicker = false
-                    onPhotoCaptured(CapturedSpacePhoto(cgImage: cgImage, prompt: prompt))
-                },
-                onCancel: {
-                    showPicker = false
-                }
-            )
-        }
+        .background(AppPalette.background)
     }
 
     private var promptField: some View {
@@ -101,40 +134,6 @@ struct SpaceFitCaptureView: View {
             Image(systemName: "xmark").opacity(0) // symmetry spacer
         }
         .padding()
-    }
-
-    private var actionButtons: some View {
-        VStack(spacing: 12) {
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button {
-                    pickerSource = .camera
-                    showPicker = true
-                } label: {
-                    Label("Take Photo", systemImage: "camera.fill")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.blinkitOrange)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-            }
-
-            Button {
-                pickerSource = .photoLibrary
-                showPicker = true
-            } label: {
-                Label("Choose from Library", systemImage: "photo.on.rectangle")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(AppPalette.background.opacity(0.72))
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-        }
-        .padding(.horizontal)
-        .padding(.bottom)
     }
 }
 

@@ -30,22 +30,54 @@ struct ARPreviewView: View {
 
     var body: some View {
         ZStack {
-            ARViewContainer(source: .parametric(dimensions), coordinator: coordinator)
-                .ignoresSafeArea()
+            ARViewContainer(
+                source: .parametric(dimensions, requiredSurface: product.requiredSurface),
+                coordinator: coordinator
+            )
+            .ignoresSafeArea()
+
+            // Gradients alone bleed under the Dynamic Island/home indicator
+            // for a seamless look — the actual text sits in a SEPARATE layer
+            // below that respects the safe area, so it never renders behind
+            // the island itself.
+            VStack(spacing: 0) {
+                topScrim
+                Spacer()
+                bottomScrim
+            }
+            .ignoresSafeArea()
 
             VStack {
                 topStatusBar
                 Spacer()
-                if coordinator.isPlaced {
-                    dimensionCard
+                VStack(spacing: 16) {
+                    if coordinator.isPlaced {
+                        dimensionCard
+                    }
+                    controlBar
                 }
-                controlBar
             }
             .padding()
         }
         .sheet(isPresented: $showFeedbackPrompt) {
             feedbackSheet
         }
+        // Same reasoning as PolishedARPreviewView — wherever this screen
+        // ends up presented from, its own toast host guarantees the
+        // wall/floor mismatch toast is visible on top of it.
+        .toastHost()
+    }
+
+    private var topScrim: some View {
+        LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom)
+            .frame(height: 150)
+            .allowsHitTesting(false)
+    }
+
+    private var bottomScrim: some View {
+        LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+            .frame(height: 220)
+            .allowsHitTesting(false)
     }
 
     private var topStatusBar: some View {
@@ -58,14 +90,12 @@ struct ARPreviewView: View {
             Button {
                 onDone()
             } label: {
-                Image(systemName: "xmark.circle.fill")
+                Image(systemName: "chevron.backward.circle.fill")
                     .font(.title2)
             }
         }
         .foregroundStyle(.white)
-        .padding()
-        .background(.black.opacity(0.35))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.5), radius: 6)
     }
 
     private var dimensionCard: some View {
@@ -81,7 +111,7 @@ struct ARPreviewView: View {
                 .font(.title3.weight(.bold))
             Label("Walk around it", systemImage: "figure.walk")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.7))
 
             Button {
                 showFeedbackPrompt = true
@@ -92,19 +122,21 @@ struct ARPreviewView: View {
             }
             .padding(.top, 4)
         }
-        .padding()
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .foregroundStyle(.white)
+        .shadow(color: .black.opacity(0.5), radius: 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var controlBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             controlPill(icon: "rotate.3d", label: "Twist to rotate")
             controlPill(icon: "hand.tap.fill", label: "Hold to re-place")
         }
         .font(.caption)
-        .foregroundStyle(.white)
+        .foregroundStyle(.white.opacity(0.9))
+        .shadow(color: .black.opacity(0.5), radius: 4)
         .opacity(coordinator.isPlaced ? 1 : 0)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func controlPill(icon: String, label: String) -> some View {
@@ -112,10 +144,6 @@ struct ARPreviewView: View {
             Image(systemName: icon)
             Text(label)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.black.opacity(0.35))
-        .clipShape(Capsule())
     }
 
     private var feedbackSheet: some View {

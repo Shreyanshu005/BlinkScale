@@ -36,32 +36,41 @@ struct OnboardingView: View {
             VStack(spacing: 16) {
                 Spacer()
 
-                Image(systemName: "sparkles")
-                    .font(.system(size: 44, weight: .light))
-                    .foregroundStyle(.white.opacity(0.9))
+                Image("mascothappy")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 160, height: 160)
 
-                Text("Welcome to BlinkScalee")
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                VStack(spacing: 6) {
+                    Text("Welcome to")
+                        .font(.system(size: 18, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.7))
+
+                    (
+                        Text("Blink").fontWeight(.heavy)
+                            + Text("Scalee").fontWeight(.heavy).foregroundStyle(Color.blinkitOrange)
+                    )
+                    .font(.system(size: 36, design: .rounded))
                     .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
 
-                Text("Onboarding placeholder")
-                    .font(.body)
-                    .foregroundStyle(.white.opacity(0.7))
+                    Text("See it in your space before it's in your cart.")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 6)
+                }
+                .padding(.top, 8)
 
                 Spacer()
 
                 Button(action: onNext) {
                     Text("Next")
                         .font(.headline)
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(.white)
-                        )
                 }
+                .glassEffect(.regular.tint(Color.blinkitOrange).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
             }
