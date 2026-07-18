@@ -178,8 +178,8 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         arView.addGestureRecognizer(tap)
 
-        let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
-        arView.addGestureRecognizer(pinch)
+        // Pinch-to-resize intentionally not registered — the model is shown at
+        // its real, scale-corrected size and users must not zoom it in/out.
 
         let rotate = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation(_:)))
         arView.addGestureRecognizer(rotate)

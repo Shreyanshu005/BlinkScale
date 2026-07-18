@@ -50,7 +50,13 @@ struct ContentView: View {
                 .transition(.opacity)
 
             case .home:
-                HomePlaceholderView()
+                HomePlaceholderView(
+                    onBrowseProducts: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            appState = .catalog
+                        }
+                    }
+                )
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .opacity
@@ -124,7 +130,6 @@ struct ContentView: View {
                     }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .ignoresSafeArea()
 
             case .polishedProductPage(let content):
                 BlinkitProductPageView(

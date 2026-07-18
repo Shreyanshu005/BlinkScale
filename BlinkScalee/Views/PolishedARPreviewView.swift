@@ -104,7 +104,6 @@ struct PolishedARPreviewView: View {
 
     private var controlBar: some View {
         HStack(spacing: 12) {
-            controlPill(icon: "arrow.up.left.and.arrow.down.right", label: "Pinch to resize")
             controlPill(icon: "rotate.3d", label: "Twist to rotate")
             controlPill(icon: "hand.tap.fill", label: "Hold to re-place")
         }

@@ -74,7 +74,6 @@ struct BlinkitProductPageView: View {
                     dimensionsCM: dims,
                     onDone: { showARPreview = false }
                 )
-                .ignoresSafeArea()
             }
         }
         .alert("Can't show this in AR yet", isPresented: $arModelMissingAlert) {
