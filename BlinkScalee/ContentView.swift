@@ -22,11 +22,11 @@ enum AppState: Equatable {
     // assets (photo + converted .usdz) instead of relying on live AI.
     case polishedProductPage(BlinkitProductPageContent)
 
-    // "Find a table for my space" flow — independent of the product-preview
-    // flow above; entered directly from the catalog screen.
+    // "What would suit my room?" flow — independent of the product-preview
+    // flow above; entered directly from Home's camera button. Goes straight
+    // from a captured photo to AI recommendations — no separate scanning step.
     case spaceFitCapture
-    case spaceFitAnalyzing(CapturedSpacePhoto)
-    case spaceFitResult(SpaceEstimate, [MockProduct])
+    case spaceFitResult(CapturedSpacePhoto)
 }
 
 enum AppTab: Hashable {
@@ -162,32 +162,15 @@ struct ContentView: View {
                     },
                     onPhotoCaptured: { photo in
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .spaceFitAnalyzing(photo)
+                            appState = .spaceFitResult(photo)
                         }
                     }
                 )
                 .transition(.opacity)
 
-            case .spaceFitAnalyzing(let photo):
-                SpaceFitAnalyzingView(
-                    photo: photo,
-                    onComplete: { estimate, matches in
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .spaceFitResult(estimate, matches)
-                        }
-                    },
-                    onCancel: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            showCategory()
-                        }
-                    }
-                )
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
-
-            case .spaceFitResult(let estimate, let matches):
+            case .spaceFitResult(let photo):
                 SpaceFitResultView(
-                    estimate: estimate,
-                    matches: matches,
+                    photo: photo,
                     onSelectProduct: { product in
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             // Same routing rule as the catalog: real supplied
@@ -203,11 +186,6 @@ struct ContentView: View {
                     onDone: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             showCategory()
-                        }
-                    },
-                    onRetry: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            appState = .spaceFitCapture
                         }
                     }
                 )

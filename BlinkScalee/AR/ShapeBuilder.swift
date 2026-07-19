@@ -97,7 +97,8 @@ enum ShapeBuilder {
     static func loadModelEntity(
         usdzNamed name: String,
         targetDimensionsCM dims: (width: Double, height: Double, depth: Double),
-        rotationDegrees: (pitchX: Double, yawY: Double, rollZ: Double) = (0, 0, 0)
+        rotationDegrees: (pitchX: Double, yawY: Double, rollZ: Double) = (0, 0, 0),
+        usesGroundingShadows: Bool = true
     ) async throws -> Entity {
         guard let url = Bundle.main.url(forResource: name, withExtension: "usdz") else {
             throw ShapeBuilderError.modelNotFound(name)
@@ -125,7 +126,9 @@ enum ShapeBuilder {
             entity.transform.rotation = yaw * pitch * roll
         }
 
-        applyGroundingShadowRecursively(to: entity)
+        if usesGroundingShadows {
+            applyGroundingShadowRecursively(to: entity)
+        }
         entity.generateCollisionShapes(recursive: true)
         entity.components.set(InputTargetComponent())
 

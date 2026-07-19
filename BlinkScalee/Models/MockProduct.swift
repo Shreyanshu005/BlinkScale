@@ -341,11 +341,8 @@ extension MockProduct {
         )
     ]
 
-    /// Just the table/furniture SKUs. No longer used by the Space Fit flow
-    /// itself (that now searches the whole catalog via ProductIntentResolver
-    /// + ProductSpaceMatcher, so any product type can be requested) — kept
-    /// around as a convenience filter for anything that specifically wants
-    /// furniture only.
+    /// Just the table/furniture SKUs, kept as a convenience filter for
+    /// anything that specifically wants furniture only.
     static var tableCatalog: [MockProduct] {
         all.filter { $0.category == "Furniture" }
     }

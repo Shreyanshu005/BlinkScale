@@ -3,13 +3,11 @@
 //  BlinkScalee
 //
 //  Resolves the free-text "what are you looking for?" prompt from the Space
-//  Fit flow against the REAL catalog — deliberately split from
-//  ProductSpaceMatcher, which then decides which of these resolved
-//  candidates actually fit the estimated space. This file's only job is
-//  "which catalog items is the user talking about"; it never touches
-//  dimensions or fit logic.
+//  Fit flow against the REAL catalog. This file's only job is "which catalog
+//  items is the user talking about"; it never touches dimensions or fit
+//  logic.
 //
-//  Same anti-hallucination principle as TableMatcher/ProductSpaceMatcher:
+//  Same anti-hallucination principle used throughout the catalog AI:
 //  the model is only ever allowed to point at product names that are
 //  literally present in the catalog list it was given. Anything it returns
 //  that doesn't exactly match a real name is dropped, and a plain substring
@@ -39,9 +37,8 @@ final class ProductIntentResolver {
                 copied character-for-character — never invent a name that \
                 isn't in the list. If the request is vague, match every \
                 catalog item whose category or purpose plausibly satisfies \
-                it; casting a slightly wide net is fine, since a downstream \
-                size check will filter out anything that doesn't actually fit \
-                the user's space. If truly nothing in the catalog is relevant \
+                it; casting a slightly wide net is fine. If truly nothing in \
+                the catalog is relevant \
                 to the request, return an empty list rather than guessing.
                 """
             }

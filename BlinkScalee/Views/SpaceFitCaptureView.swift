@@ -5,10 +5,8 @@
 //  Entry point for "Find something that fits my space." Opens the camera
 //  immediately on appear — no intro screen in between — then, once a photo
 //  is captured, asks the one thing left: a free-text prompt for what the
-//  user wants (any product in the catalog, not just tables —
-//  ProductIntentResolver interprets it later). Coaches the user (in that
-//  second step) to have included a reference object in frame, since
-//  SpaceAnalyzer has no stated measurement to anchor on.
+//  user wants. The room advisor uses that optional detail to refine its
+//  photo-based decor recommendations.
 //
 
 import SwiftUI
@@ -39,9 +37,8 @@ struct SpaceFitCaptureView: View {
             if let capturedImage {
                 promptStep(image: capturedImage)
             } else {
-                // Camera sheet is presented immediately on appear (see the
-                // initial `pickerRequest` value above) — nothing to show
-                // behind it.
+                // The camera sheet is presented immediately from the initial
+                // picker request — nothing needs to show behind it.
                 AppPalette.background.ignoresSafeArea()
             }
         }
@@ -82,14 +79,19 @@ struct SpaceFitCaptureView: View {
             Spacer()
 
             Button {
-                onPhotoCaptured(CapturedSpacePhoto(cgImage: image, prompt: prompt))
+                onPhotoCaptured(CapturedSpacePhoto(
+                    cgImage: image,
+                    prompt: prompt
+                ))
             } label: {
-                Text("Find matches")
+                Text("See recommendations")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }
-            .glassEffect(.regular.tint(Color.blinkitOrange).interactive(), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .foregroundStyle(.white)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.roundedRectangle(radius: 14))
             .padding(.horizontal)
             .padding(.bottom)
         }
@@ -104,7 +106,7 @@ struct SpaceFitCaptureView: View {
 
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(Color.blinkitOrange)
+                    .foregroundStyle(.white.opacity(0.8))
                 TextField("e.g. a plant, an air fryer, a study table…", text: $prompt)
                     .focused($promptFocused)
                     .submitLabel(.done)
@@ -114,7 +116,7 @@ struct SpaceFitCaptureView: View {
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
-            Text("Leave blank to see anything that fits.")
+            Text("Leave blank for recommendations based on your room.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -125,10 +127,13 @@ struct SpaceFitCaptureView: View {
         HStack {
             Button(action: onCancel) {
                 Image(systemName: "xmark")
-                    .font(.title3.weight(.semibold))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
             }
+            .glassEffect(.regular.interactive(), in: Circle())
             Spacer()
-            Text("Space Fit Finder")
+            Text("Find for your room")
                 .font(.headline)
             Spacer()
             Image(systemName: "xmark").opacity(0) // symmetry spacer

@@ -108,21 +108,18 @@ struct HomePlaceholderView: View {
         .frame(height: heroHeight)
         .overlay(alignment: .topTrailing) {
             scanButton
-                .padding(.top, 8)
-                .padding(.trailing, 20)
+                .padding(.top, 4)
+                .padding(.trailing, 16)
         }
     }
 
     private var scanButton: some View {
         Button(action: onFindForSpace) {
             Image(systemName: "camera.viewfinder")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
+                .font(.system(size: 22, weight: .semibold))
+                .frame(width: 44, height: 44)
         }
-        // Solid, single-color fill — no gradient/material/shadow mixed in.
-        .background(Color.blinkitOrange)
-        .clipShape(Circle())
+        .buttonStyle(.glass)
         .accessibilityLabel("Scan your space")
     }
 }

@@ -37,7 +37,7 @@ struct ImagePicker: UIViewControllerRepresentable {
         }
 
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let uiImage = info[.originalImage] as? UIImage, let cgImage = uiImage.cgImage {
+            if let uiImage = info[.originalImage] as? UIImage, let cgImage = normalizedCGImage(from: uiImage) {
                 parent.onImagePicked(cgImage)
             } else {
                 parent.onCancel()
@@ -46,6 +46,17 @@ struct ImagePicker: UIViewControllerRepresentable {
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             parent.onCancel()
+        }
+
+        /// `CGImage` does not retain UIImage's orientation metadata. Redraw
+        /// once so SwiftUI and the Foundation Model both receive upright
+        /// pixels instead of the camera sensor's landscape image.
+        private func normalizedCGImage(from image: UIImage) -> CGImage? {
+            let format = UIGraphicsImageRendererFormat.default()
+            format.scale = image.scale
+            return UIGraphicsImageRenderer(size: image.size, format: format)
+                .image { _ in image.draw(in: CGRect(origin: .zero, size: image.size)) }
+                .cgImage
         }
     }
 }

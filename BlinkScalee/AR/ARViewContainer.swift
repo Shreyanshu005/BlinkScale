@@ -25,6 +25,14 @@ struct ARViewContainer: UIViewRepresentable {
 
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
+
+        // Grounding shadows are a floor-contact effect. RealityKit's shadow
+        // compute pass is not appropriate for vertical AR planes and can hit
+        // a Metal assertion for wall-mounted USDZ assets on current iOS
+        // builds. Keep the normal shadow treatment for floor content.
+        if source.requiredSurface == .wall {
+            arView.renderOptions.insert(.disableGroundingShadows)
+        }
         coordinator.setupARView(arView, source: source)
         return arView
     }

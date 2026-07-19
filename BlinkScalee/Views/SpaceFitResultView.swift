@@ -2,24 +2,26 @@
 //  SpaceFitResultView.swift
 //  BlinkScalee
 //
-//  Shows the estimated space alongside every catalog product that both
-//  matches the user's free-text prompt (resolved by ProductIntentResolver)
-//  AND fits inside the estimate (filtered/ranked by ProductSpaceMatcher) —
-//  or an honest "nothing fits" message when the list comes back empty.
-//  Never fabricates a recommendation just to have something to show.
+//  Shows a short, Siri-style recommendation for the shopper's room photo
+//  (RoomAdvisor, on-device Foundation Models image understanding) alongside
+//  catalog products that would suit it. No dimensions, no confidence badge,
+//  no "estimated space" — just a spoken-style summary and tappable cards.
 //
 
 import SwiftUI
+import UIKit
 
 struct SpaceFitResultView: View {
-    let estimate: SpaceEstimate
-    let matches: [MockProduct]
+    let photo: CapturedSpacePhoto
     let onSelectProduct: (MockProduct) -> Void
     let onDone: () -> Void
-    let onRetry: () -> Void
 
     private let columnGap: CGFloat = 12
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
+    @State private var summary: String = ""
+    @State private var products: [MockProduct] = []
+    @State private var isLoading = true
 
     // Measured off the grid's own ACTUAL proposed width at render time —
     // `UIScreen.main.bounds.width` turned out to be unreliable in some
@@ -27,45 +29,52 @@ struct SpaceFitResultView: View {
     // real screen), so this reads the real, current width directly instead.
     @State private var cardWidth: CGFloat?
 
+    private let advisor = RoomAdvisor()
+
     var body: some View {
         VStack(spacing: 0) {
             header
 
             ScrollView {
                 VStack(spacing: 20) {
-                    estimateCard
+                    summaryCard
 
-                    if matches.isEmpty {
-                        noFitCard
-                    } else {
-                        matchesGrid
+                    if !isLoading {
+                        if products.isEmpty {
+                            noFitCard
+                        } else {
+                            matchesGrid
+                        }
                     }
                 }
                 .padding()
             }
             .background(AppPalette.background)
-
-            Button("Try Another Photo", action: onRetry)
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(Color.blinkitOrange)
-                .padding(.bottom)
         }
         .preferredColorScheme(.dark)
+        .task {
+            let result = await advisor.recommend(image: photo.cgImage, prompt: photo.prompt, catalog: MockProduct.all)
+            summary = result.summary
+            products = result.products
+            isLoading = false
+        }
     }
 
     private var header: some View {
         HStack {
             Spacer()
-            Text("Your Matches")
+            Text("For Your Space")
                 .font(.headline)
             Spacer()
         }
         .overlay(alignment: .trailing) {
             Button(action: onDone) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
             }
+            .glassEffect(.regular.interactive(), in: Circle())
             .padding(.trailing)
         }
         .padding(.top)
@@ -73,19 +82,26 @@ struct SpaceFitResultView: View {
         .background(AppPalette.background)
     }
 
-    private var estimateCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Estimated Space")
-                    .font(.headline)
-                Spacer()
-                ConfidenceBadge(confidence: estimate.confidence)
+    private var summaryCard: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "sparkles")
+                .foregroundStyle(.white.opacity(0.85))
+                .font(.system(size: 16, weight: .semibold))
+                .padding(.top, 2)
+
+            if isLoading {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .tint(.white.opacity(0.7))
+                    Text("Looking at your room…")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text(summary)
+                    .font(.subheadline.weight(.medium))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text(estimate.spaceLabel)
-                .font(.title3.weight(.bold))
-            Text(estimate.reasoning)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -95,15 +111,15 @@ struct SpaceFitResultView: View {
 
     private var matchesGrid: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("\(matches.count) thing\(matches.count == 1 ? "" : "s") that fit\(matches.count == 1 ? "s" : "")")
+            Text("Recommended for you")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Color.blinkitOrange)
+                .foregroundStyle(.white.opacity(0.75))
 
             LazyVGrid(columns: columns, spacing: columnGap) {
-                ForEach(matches) { product in
+                ForEach(products) { product in
                     ProductCard(
                         product: product,
-                        badge: product.id == matches.first?.id ? .bestFit : nil,
+                        badge: product.id == products.first?.id ? .bestFit : nil,
                         width: cardWidth,
                         onSelect: { onSelectProduct(product) }
                     )
@@ -119,12 +135,12 @@ struct SpaceFitResultView: View {
 
     private var noFitCard: some View {
         VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
-            Text("Nothing in our catalog fits that space comfortably.")
+            Image(systemName: "sparkles")
+                .foregroundStyle(.secondary)
+            Text("Nothing in our catalog feels right for this room yet.")
                 .font(.subheadline.weight(.semibold))
                 .multilineTextAlignment(.center)
-            Text("Try a spot with a bit more room, a different request, or check back as we add more products.")
+            Text("Check back as we add more products.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -138,10 +154,8 @@ struct SpaceFitResultView: View {
 
 #Preview {
     SpaceFitResultView(
-        estimate: SpaceEstimate(availableWidthCM: 92, availableDepthCM: 60, confidence: .medium, reasoning: "Used the doorway width as a reference."),
-        matches: Array(MockProduct.all.prefix(3)),
+        photo: CapturedSpacePhoto(cgImage: UIImage(systemName: "photo")!.cgImage!, prompt: ""),
         onSelectProduct: { _ in },
-        onDone: {},
-        onRetry: {}
+        onDone: {}
     )
 }

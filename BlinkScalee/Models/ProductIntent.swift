@@ -3,8 +3,8 @@
 //  BlinkScalee
 //
 //  The AI contract for "what does the user's free-text request mean, against
-//  our actual catalog?" Mirrors SpaceEstimate/ProductDimensions in spirit —
-//  structured, @Generable output rather than parsed free text. Deliberately
+//  our actual catalog?" Uses structured, @Generable output rather than
+//  parsed free text. Deliberately
 //  returns catalog NAMES rather than a category enum, since names are the
 //  concrete thing `ProductIntentResolver` can validate against real
 //  MockProduct entries afterward (never trusting the model's output as final).

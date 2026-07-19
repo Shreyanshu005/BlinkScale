@@ -311,7 +311,8 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
                 entity = try await ShapeBuilder.loadModelEntity(
                     usdzNamed: name,
                     targetDimensionsCM: dims,
-                    rotationDegrees: rotationDegrees
+                    rotationDegrees: rotationDegrees,
+                    usesGroundingShadows: requiredSurface != .wall
                 )
             }
         } catch {
