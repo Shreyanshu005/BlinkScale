@@ -33,6 +33,7 @@ struct ProductCard: View {
     var width: CGFloat? = nil
     var onSelect: () -> Void = {}
     var onAdd: () -> Void = {}
+    @State private var showsProductSummary = false
 
     enum Badge {
         case bestFit
@@ -80,7 +81,15 @@ struct ProductCard: View {
                 .stroke(Color.white.opacity(0.16), lineWidth: 1)
         )
         .contentShape(Rectangle())
-        .onTapGesture(perform: onSelect)
+        .gesture(
+            TapGesture()
+                .onEnded { _ in onSelect() }
+                .exclusively(before: LongPressGesture(minimumDuration: 0.55)
+                    .onEnded { _ in showsProductSummary = true })
+        )
+        .sheet(isPresented: $showsProductSummary) {
+            ProductSummarySheet(product: product)
+        }
     }
 
     // MARK: - Image + overlays

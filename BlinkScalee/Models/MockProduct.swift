@@ -23,6 +23,8 @@ struct MockProduct: Identifiable, Equatable, Hashable {
     let weightOrSizeLabel: String
     let imageSystemName: String
     let tintHex: String
+    /// Curated catalog copy used as grounded context for product summaries.
+    let mockDescription: String
 
     /// Ground-truth dimensions used only to sanity-check the AI estimate
     /// during rehearsal — never shown to the user, never fed to the model.
@@ -77,6 +79,15 @@ struct MockProduct: Identifiable, Equatable, Hashable {
 }
 
 extension MockProduct {
+    /// The supplied catalog photo, when present, for on-device visual AI
+    /// context. Products without one use their rendered SF Symbol fallback.
+    var catalogCGImage: CGImage? {
+        if let assetName = cardImageAssetName, let image = UIImage(named: assetName)?.cgImage {
+            return image
+        }
+        return renderedCGImage
+    }
+
     /// Renders the SF Symbol placeholder to a CGImage so it can be fed to
     /// `DimensionAnalyzer` exactly like a real product photo would be. This
     /// is the hackathon shortcut mentioned in the plan — swapping in real
@@ -149,6 +160,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "studentdesk",
             tintHex: "B33A2E",
+            mockDescription: "A crimson-red adjustable laptop table with a compact work surface and wheeled metal base for flexible study or laptop setups.",
             referenceDimensionsCM: (width: 60, height: 75, depth: 40),
             referenceShape: .box,
             mrpRupees: 2_999,
@@ -167,6 +179,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "leaf.fill",
             tintHex: "3E7C4F",
+            mockDescription: "A compact jade plant in a self-watering pot, suited to desks, shelves, and bright indoor corners.",
             referenceDimensionsCM: (width: 9.9, height: 24.9, depth: 9.9),
             referenceShape: .cylinder,
             rating: 4.5,
@@ -182,6 +195,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "leaf.fill",
             tintHex: "C46B8C",
+            mockDescription: "A Lady Valentine Aglaonema indoor plant with pink-toned foliage in a small decorative pot.",
             referenceDimensionsCM: (width: 10, height: 20, depth: 10),
             referenceShape: .cylinder,
             mrpRupees: 499,
@@ -198,6 +212,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "leaf.fill",
             tintHex: "2F6B3A",
+            mockDescription: "A compact ZZ plant in a self-watering pot, designed as a low-maintenance green accent for indoor spaces.",
             referenceDimensionsCM: (width: 11.4, height: 25.4, depth: 11.4),
             referenceShape: .cylinder,
             mrpRupees: 549,
@@ -214,6 +229,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 unit",
             imageSystemName: "oven.fill",
             tintHex: "1A1A1A",
+            mockDescription: "A 4.5-litre, 1500-watt countertop air fryer with a see-through cooking window for quick everyday meals.",
             referenceDimensionsCM: (width: 30, height: 30.5, depth: 24.5),
             referenceShape: .box,
             mrpRupees: 9_999,
@@ -230,6 +246,7 @@ extension MockProduct {
             weightOrSizeLabel: "2 pcs",
             imageSystemName: "sofa.fill",
             tintHex: "6F4E37",
+            mockDescription: "A coffee-colored velvet dining chair cover set containing two covers for refreshing compatible dining chairs.",
             referenceDimensionsCM: (width: 48.3, height: 66.0, depth: 45.7),
             referenceShape: .box,
             mrpRupees: 1_499,
@@ -246,6 +263,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "sofa.fill",
             tintHex: "2A6FB5",
+            mockDescription: "A blue folding camping chair that packs down for portable seating in balconies, outings, or compact spaces.",
             referenceDimensionsCM: (width: 82, height: 17.5, depth: 17.5),
             referenceShape: .box,
             mrpRupees: 1_999,
@@ -262,6 +280,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "clock.fill",
             tintHex: "6F2C1E",
+            mockDescription: "A 30 cm mahogany-finish wood wall clock intended as a warm, functional wall decor accent.",
             referenceDimensionsCM: (width: 30, height: 30, depth: 5),
             referenceShape: .cylinder,
             requiredSurface: .wall,
@@ -279,6 +298,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "rectangle.fill",
             tintHex: "5C3A21",
+            mockDescription: "A brown blackout door curtain sized 48 by 84 inches for covering a doorway or tall window.",
             referenceDimensionsCM: (width: 121.9, height: 213.4, depth: 2),
             referenceShape: .box,
             requiredSurface: .wall,
@@ -296,6 +316,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "bell.fill",
             tintHex: "D4AF37",
+            mockDescription: "A small golden brass Ganesha wall hanging with a bell, made for a compact decorative wall accent.",
             referenceDimensionsCM: (width: 11.4, height: 22.9, depth: 7.6),
             referenceShape: .box,
             requiredSurface: .wall,
@@ -313,6 +334,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "circle.fill",
             tintHex: "D96C3F",
+            mockDescription: "A 20 cm multicolour ceramic wall plate designed to be displayed as decorative wall art.",
             referenceDimensionsCM: (width: 20, height: 20, depth: 2),
             referenceShape: .cylinder,
             requiredSurface: .wall,
@@ -330,6 +352,7 @@ extension MockProduct {
             weightOrSizeLabel: "1 pc",
             imageSystemName: "diamond.fill",
             tintHex: "6E6E6E",
+            mockDescription: "A small owl-shaped pyrite stone showpiece for styling a shelf, side table, or display nook.",
             referenceDimensionsCM: (width: 7, height: 8, depth: 7),
             referenceShape: .box,
             mrpRupees: 1_700,

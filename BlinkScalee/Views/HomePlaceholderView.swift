@@ -76,11 +76,12 @@ struct HomePlaceholderView: View {
     let onFindForSpace: () -> Void
     @ObservedObject var profile: UserProfile
 
-    private let heroHeight: CGFloat = 220
+    private let heroHeight: CGFloat = 270
 
     @State private var showMascotChat = false
     @State private var showProfile = false
     @State private var showsSpaceTooltip = false
+    @State private var chatInviteIndex = 0
     @AppStorage("hasSeenSpaceFitTooltip") private var hasSeenSpaceFitTooltip = false
 
     var body: some View {
@@ -110,19 +111,39 @@ struct HomePlaceholderView: View {
             showsSpaceTooltip = true
             hasSeenSpaceFitTooltip = true
         }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(3))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    chatInviteIndex = (chatInviteIndex + 1) % chatInvites.count
+                }
+            }
+        }
     }
 
     /// Plain page background behind the mascot — no curved/colored region.
     private var heroSection: some View {
         ZStack(alignment: .bottom) {
-            Image("mascothappy")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 180)
-                .padding(.bottom, 20)
-                // Tap the mascot to chat with Blipblu.
-                .contentShape(Rectangle())
-                .onTapGesture { showMascotChat = true }
+            VStack(spacing: 0) {
+                Image("mascothappy")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 180)
+                    .contentShape(Rectangle())
+                    .onTapGesture { showMascotChat = true }
+
+                Button(action: { showMascotChat = true }) {
+                    Text(chatInvites[chatInviteIndex])
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .contentTransition(.opacity)
+                        .frame(minHeight: 20)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, -4)
+            }
+            .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity)
         .frame(height: heroHeight)
@@ -192,6 +213,15 @@ struct HomePlaceholderView: View {
                     .frame(width: 14, height: 7)
                     .offset(x: 15, y: -6)
             }
+    }
+
+    private var chatInvites: [String] {
+        [
+            "Tap me — I’m Blipblu! ✨",
+            "Psst… I know some lovely finds 👀",
+            "Need a decor buddy? Tap me! 🐾",
+            "I’m Blipblu. Let’s find your next favorite thing!"
+        ]
     }
 }
 
