@@ -74,6 +74,8 @@ struct HomePlaceholderView: View {
 
     private let heroHeight: CGFloat = 220
 
+    @State private var showMascotChat = false
+
     var body: some View {
         ScrollView {
             heroSection
@@ -85,6 +87,9 @@ struct HomePlaceholderView: View {
         .background(AppPalette.background)
         .scrollIndicators(.hidden)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showMascotChat) {
+            BlipbluChatView()
+        }
     }
 
     /// Plain page background behind the mascot — no curved/colored region.
@@ -95,6 +100,9 @@ struct HomePlaceholderView: View {
                 .scaledToFit()
                 .frame(width: 180)
                 .padding(.bottom, 20)
+                // Tap the mascot to chat with Blipblu.
+                .contentShape(Rectangle())
+                .onTapGesture { showMascotChat = true }
         }
         .frame(maxWidth: .infinity)
         .frame(height: heroHeight)

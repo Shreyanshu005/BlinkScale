@@ -39,7 +39,6 @@ struct BlinkitProductPageView: View {
         static let variantLabelText = Color(red: 0.56, green: 0.59, blue: 0.72)
         static let viewDetailsGreen = Color(red: 0.05, green: 0.24, blue: 0.12)
         static let addToCartGreen = Color(red: 0.11, green: 0.44, blue: 0.18)
-        static let miniCartGreen = Color(red: 0.10, green: 0.46, blue: 0.19)
         static let starGold = Color(red: 1.0, green: 0.78, blue: 0.25)
         static let stockAmber = Color(red: 0.92, green: 0.58, blue: 0.25)
         static let bankMagenta = Color(red: 0.53, green: 0.12, blue: 0.32)
@@ -52,50 +51,48 @@ struct BlinkitProductPageView: View {
     }
 
     var body: some View {
-        // Nested NavigationStack, scoped just to this page's own AR
-        // sub-navigation — works the same regardless of whether THIS page
-        // itself is pushed onto an outer tab NavigationStack or shown via
-        // ContentView's older state machine (Space Fit flow). Replaces the
-        // old `.fullScreenCover` presentation, which had no back button and
-        // no swipe-to-dismiss of its own.
-        NavigationStack {
-            ZStack(alignment: .bottom) {
-                Palette.background.ignoresSafeArea()
+        // No NavigationStack of its own here — this page is either pushed
+        // onto an OUTER tab NavigationStack (ProductPageDestination) or
+        // shown via ContentView's plain state machine (Space Fit flow),
+        // neither of which wants a SECOND, nested NavigationStack wrapping
+        // this content. Nesting one broke pushing to this page entirely —
+        // a NavigationStack pushed inside another NavigationStack's own
+        // destination is an unsupported pattern that can render blank or
+        // get stuck. AR sub-navigation instead uses `.fullScreenCover`, a
+        // modal presentation that works identically in both contexts.
+        ZStack(alignment: .bottom) {
+            Palette.background.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        imageCarousel
-                        paginationDots
-                        viewInRoomButton
-                        variantRow
-                        detailsSection
-                    }
-                }
-
-                bottomBar
-            }
-            .overlay(alignment: .leading) {
-                if showsCustomBackGesture {
-                    edgeSwipeBackZone
+            ScrollView {
+                VStack(spacing: 0) {
+                    imageCarousel
+                    paginationDots
+                    viewInRoomButton
+                    variantRow
+                    detailsSection
                 }
             }
-            .preferredColorScheme(.dark)
-            // This page draws its own back/share/wishlist controls over the
-            // image carousel — a system nav bar on top would just be a
-            // second, redundant title bar.
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(isPresented: $showARPreview) {
-                if let name = content.arModelResourceName, let dims = content.dimensionsCM {
-                    PolishedARPreviewView(
-                        productName: content.title,
-                        productImageSystemName: content.imageSystemNames.first ?? "shippingbox.fill",
-                        usdzResourceName: name,
-                        dimensionsCM: dims,
-                        requiredSurface: content.requiredSurface,
-                        rotationDegrees: content.arModelRotationDegrees,
-                        onDone: { showARPreview = false }
-                    )
-                }
+
+            bottomBar
+        }
+        .overlay(alignment: .leading) {
+            if showsCustomBackGesture {
+                edgeSwipeBackZone
+            }
+        }
+        .preferredColorScheme(.dark)
+        .toolbar(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: $showARPreview) {
+            if let name = content.arModelResourceName, let dims = content.dimensionsCM {
+                PolishedARPreviewView(
+                    productName: content.title,
+                    productImageSystemName: content.imageSystemNames.first ?? "shippingbox.fill",
+                    usdzResourceName: name,
+                    dimensionsCM: dims,
+                    requiredSurface: content.requiredSurface,
+                    rotationDegrees: content.arModelRotationDegrees,
+                    onDone: { showARPreview = false }
+                )
             }
         }
         .alert("Can't show this in AR yet", isPresented: $arModelMissingAlert) {
@@ -203,11 +200,6 @@ struct BlinkitProductPageView: View {
         HStack {
             circleButton(systemName: "chevron.down", action: onBack)
             Spacer()
-            HStack(spacing: 10) {
-                circleButton(systemName: "heart", action: {})
-                circleButton(systemName: "magnifyingglass", action: {})
-                circleButton(systemName: "square.and.arrow.up", action: {})
-            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
@@ -456,10 +448,6 @@ struct BlinkitProductPageView: View {
 
     private var bottomBar: some View {
         VStack(spacing: 0) {
-            if content.cartItemCount > 0 {
-                miniCartPill
-            }
-
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(content.quantityLabel)
@@ -497,23 +485,6 @@ struct BlinkitProductPageView: View {
             .padding(.vertical, 12)
             .background(Palette.background)
         }
-    }
-
-    private var miniCartPill: some View {
-        HStack {
-            Text("View cart")
-                .font(.subheadline.weight(.bold))
-            Spacer()
-            Text("\(content.cartItemCount) Items")
-                .font(.caption)
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(Palette.miniCartGreen)
-        .clipShape(Capsule())
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
     }
 }
 

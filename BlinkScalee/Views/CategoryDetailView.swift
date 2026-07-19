@@ -56,6 +56,7 @@ struct CategoryDetailView: View {
         .background(AppPalette.background)
         .navigationTitle(category)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }
 

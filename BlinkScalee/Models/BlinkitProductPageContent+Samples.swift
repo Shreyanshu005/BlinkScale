@@ -45,7 +45,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "p.square.fill"
         ),
-        cartItemCount: 3,
         // Drop the converted "portronics_laptop_table.usdz" into the Xcode
         // project (any target-membership folder is fine) and this button
         // starts working immediately — no other code changes needed.
@@ -79,7 +78,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "leaf.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "plant_pot"
     )
 
@@ -109,7 +107,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "leaf.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "plant"
     )
 
@@ -139,7 +136,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "leaf.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "plant2"
     )
 
@@ -170,7 +166,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "oven.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "airfryer"
     )
 
@@ -200,7 +195,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "sofa.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "chair"
     )
 
@@ -230,7 +224,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "sofa.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "chair2"
     )
 
@@ -260,7 +253,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "clock.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "clock",
         requiredSurface: .wall
     )
@@ -291,7 +283,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "rectangle.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "curtain",
         requiredSurface: .wall
     )
@@ -322,7 +313,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "bell.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "hanger",
         requiredSurface: .wall
     )
@@ -353,7 +343,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "circle.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "walldecor2",
         requiredSurface: .wall
     )
@@ -386,7 +375,6 @@ extension BlinkitProductPageContent {
             subtitle: "Explore all products",
             iconSystemName: "diamond.fill"
         ),
-        cartItemCount: 0,
         arModelResourceName: "walldecor3"
     )
 }

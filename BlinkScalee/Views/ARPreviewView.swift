@@ -36,23 +36,30 @@ struct ARPreviewView: View {
             )
             .ignoresSafeArea()
 
-            // No boxed cards — text floats directly over soft top/bottom
-            // gradient scrims (fading to clear toward the middle) so the
-            // camera feed stays the focus and nothing reads as UI chrome.
+            // Gradients alone bleed under the Dynamic Island/home indicator
+            // for a seamless look — the actual text sits in a SEPARATE layer
+            // below that respects the safe area, so it never renders behind
+            // the island itself (this matters most for wall items, whose
+            // longer "Scanning for a wall…" status text is more likely to
+            // sit right under the island if it isn't kept clear of it).
             VStack(spacing: 0) {
-                topScrim.overlay(alignment: .top) { topStatusBar.padding() }
+                topScrim
                 Spacer()
-                bottomScrim.overlay(alignment: .bottom) {
-                    VStack(spacing: 16) {
-                        if coordinator.isPlaced {
-                            dimensionCard
-                        }
-                        controlBar
-                    }
-                    .padding()
-                }
+                bottomScrim
             }
             .ignoresSafeArea()
+
+            VStack {
+                topStatusBar
+                Spacer()
+                VStack(spacing: 16) {
+                    if coordinator.isPlaced {
+                        dimensionCard
+                    }
+                    controlBar
+                }
+            }
+            .padding()
         }
         .sheet(isPresented: $showFeedbackPrompt) {
             feedbackSheet

@@ -33,7 +33,6 @@ struct ProductCard: View {
     var width: CGFloat? = nil
     var onSelect: () -> Void = {}
     var onAdd: () -> Void = {}
-    var onToggleWishlist: () -> Void = {}
 
     enum Badge {
         case bestFit
@@ -44,8 +43,6 @@ struct ProductCard: View {
             }
         }
     }
-
-    @State private var isWishlisted = false
 
     private var tintColor: Color {
         Color(UIColor(hex: product.tintHex) ?? .systemGray)
@@ -111,10 +108,6 @@ struct ProductCard: View {
         .frame(maxWidth: .infinity)
         .frame(height: 190)
         .clipped()
-        .overlay(alignment: .topTrailing) {
-            wishlistButton
-                .padding(8)
-        }
         .overlay(alignment: .bottomLeading) {
             if product.isSponsored {
                 Text("Ad")
@@ -139,19 +132,6 @@ struct ProductCard: View {
                     .padding(8)
             }
         }
-    }
-
-    private var wishlistButton: some View {
-        Button {
-            isWishlisted.toggle()
-            onToggleWishlist()
-        } label: {
-            Image(systemName: isWishlisted ? "heart.fill" : "heart")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(isWishlisted ? .pink : .white)
-                .frame(width: 28, height: 28)
-        }
-        .glassEffect(.regular.interactive(), in: Circle())
     }
 
     // MARK: - Footer bar (quantity + quick-add)

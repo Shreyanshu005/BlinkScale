@@ -81,9 +81,6 @@ struct BlinkitProductPageContent: Identifiable {
     }
     let brand: BrandInfo?
 
-    // MARK: Cart state
-    let cartItemCount: Int
-
     // MARK: AR
     /// Filename (no extension) of a `.usdz` bundled in the app's resources.
     /// When set, BlinkitProductPageView shows a "View in your room" button

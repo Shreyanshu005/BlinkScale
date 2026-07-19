@@ -14,11 +14,16 @@ struct HouseholdCategory: Identifiable {
     let name: String
     let imageAssetName: String
 
+    // NOTE: each category image has its store name baked into the picture,
+    // so the `name` here MUST match what its `imageAssetName` visually says
+    // (and must equal a real `MockProduct.category` so tapping filters to the
+    // right products). cat2's image reads "Artifacts Store" but its products
+    // live under the existing "Home Decor" category, so it keeps that name.
     static let all: [HouseholdCategory] = [
-        HouseholdCategory(name: "Home Decor", imageAssetName: "cat1"),
-        HouseholdCategory(name: "Furniture", imageAssetName: "cat2"),
-        HouseholdCategory(name: "Appliances", imageAssetName: "cat3"),
-        HouseholdCategory(name: "Plants", imageAssetName: "cat4")
+        HouseholdCategory(name: "Appliances", imageAssetName: "cat1"), // "Appliances Store"
+        HouseholdCategory(name: "Home Decor", imageAssetName: "cat2"), // "Artifacts Store"
+        HouseholdCategory(name: "Furniture", imageAssetName: "cat3"),  // "Furniture Store"
+        HouseholdCategory(name: "Plants", imageAssetName: "cat4")      // "Plants Store"
     ]
 }
 
