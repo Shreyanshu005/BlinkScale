@@ -19,8 +19,8 @@ struct CapturedSpacePhoto: Identifiable, Equatable {
 
     /// Free-text description of what the user is looking for (e.g. "a table
     /// for my laptop", "something green for this corner", "an air fryer").
-    /// Empty means "anything that fits" — the whole catalog is the candidate
-    /// pool rather than a single product type.
+    /// Empty means the visual advisor chooses what best suits the photographed
+    /// area from the catalog.
     var prompt: String = ""
 
     static func == (lhs: CapturedSpacePhoto, rhs: CapturedSpacePhoto) -> Bool {

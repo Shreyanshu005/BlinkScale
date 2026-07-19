@@ -19,32 +19,6 @@ import FoundationModels
 
 @MainActor
 final class ProductIntentResolver {
-
-    private let session: LanguageModelSession
-
-    init() {
-        session = LanguageModelSession(
-            instructions: Instructions {
-                """
-                You match a shopper's free-text request against a fixed \
-                product catalog for a quick-commerce app. You'll be given the \
-                full catalog as a list of "Name (Category)" entries, followed \
-                by what the shopper typed in their own words — this could be \
-                specific ("a table for my laptop") or vague ("something green \
-                for this corner", "a snack maker").
-
-                Return ONLY product names that appear in the catalog list, \
-                copied character-for-character — never invent a name that \
-                isn't in the list. If the request is vague, match every \
-                catalog item whose category or purpose plausibly satisfies \
-                it; casting a slightly wide net is fine. If truly nothing in \
-                the catalog is relevant \
-                to the request, return an empty list rather than guessing.
-                """
-            }
-        )
-    }
-
     /// Resolves `prompt` against `catalog`, returning only entries that are
     /// both named by the model AND really present in `catalog`. Falls back
     /// to a plain substring match (name/category vs. prompt) if the model
@@ -55,6 +29,26 @@ final class ProductIntentResolver {
         guard !trimmedPrompt.isEmpty else { return catalog }
 
         do {
+            // Intent matching is independent for every user query. A fresh
+            // session avoids accumulating prior search text in the finite
+            // Foundation Models context window.
+            let session = LanguageModelSession(
+                instructions: Instructions {
+                    """
+                    You match a shopper's free-text request against a fixed \
+                    product catalog for a quick-commerce app. You'll be given the \
+                    full catalog as a list of "Name (Category)" entries, followed \
+                    by what the shopper typed in their own words.
+
+                    Return ONLY product names that appear in the catalog list, \
+                    copied character-for-character — never invent a name that \
+                    isn't in the list. If the request is vague, match every \
+                    catalog item whose category or purpose plausibly satisfies it. \
+                    If truly nothing in the catalog is relevant, return an empty \
+                    list rather than guessing.
+                    """
+                }
+            )
             let catalogListing = catalog
                 .map { "- \($0.name) (\($0.category))" }
                 .joined(separator: "\n")

@@ -190,7 +190,7 @@ struct ContentView: View {
                     },
                     onDone: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            showCategory()
+                            showHome()
                         }
                     }
                 )
@@ -203,6 +203,11 @@ struct ContentView: View {
 
     private func showCategory() {
         selectedTab = .category
+        appState = .home
+    }
+
+    private func showHome() {
+        selectedTab = .home
         appState = .home
     }
 }
