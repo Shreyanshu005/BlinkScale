@@ -40,8 +40,12 @@ struct ContentView: View {
     // directly on launch, skipping the catalog. Nothing else was deleted —
     // set this back to `.catalog` (and revert the #Preview below) once
     // you're done checking the "View in your room" button.
-    @State private var appState: AppState = .onboarding
+    @State private var appState: AppState
     @State private var selectedTab: AppTab = .home
+
+    init() {
+        _appState = State(initialValue: UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") ? .home : .onboarding)
+    }
 
     var body: some View {
         ZStack {
@@ -52,6 +56,7 @@ struct ContentView: View {
             case .onboarding:
                 OnboardingView(
                     onNext: {
+                        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             appState = .home
                         }

@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct AppTabContainer: View {
     @Binding var selectedTab: AppTab
@@ -18,6 +19,7 @@ struct AppTabContainer: View {
     @State private var homePath = NavigationPath()
     @State private var categoryPath = NavigationPath()
     @State private var searchPath = NavigationPath()
+    @StateObject private var profile = UserProfile()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -28,7 +30,8 @@ struct AppTabContainer: View {
                         onSelectCategory: { category in
                             homePath.append(CategoryRoute(name: category.name))
                         },
-                        onFindForSpace: onFindForSpace
+                        onFindForSpace: onFindForSpace,
+                        profile: profile
                     )
                     .navigationDestination(for: MockProduct.self) { product in
                         ProductPageDestination(product: product)
@@ -71,10 +74,14 @@ struct HomePlaceholderView: View {
     let onSelectProduct: (MockProduct) -> Void
     let onSelectCategory: (HouseholdCategory) -> Void
     let onFindForSpace: () -> Void
+    @ObservedObject var profile: UserProfile
 
     private let heroHeight: CGFloat = 220
 
     @State private var showMascotChat = false
+    @State private var showProfile = false
+    @State private var showsSpaceTooltip = false
+    @AppStorage("hasSeenSpaceFitTooltip") private var hasSeenSpaceFitTooltip = false
 
     var body: some View {
         ScrollView {
@@ -86,9 +93,22 @@ struct HomePlaceholderView: View {
         }
         .background(AppPalette.background)
         .scrollIndicators(.hidden)
+        .simultaneousGesture(TapGesture().onEnded {
+            showsSpaceTooltip = false
+        })
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showMascotChat) {
             BlipbluChatView()
+        }
+        .sheet(isPresented: $showProfile) {
+            ProfileSheet(profile: profile)
+        }
+        .task {
+            guard !hasSeenSpaceFitTooltip else { return }
+            try? await Task.sleep(for: .milliseconds(700))
+            guard !Task.isCancelled else { return }
+            showsSpaceTooltip = true
+            hasSeenSpaceFitTooltip = true
         }
     }
 
@@ -106,21 +126,83 @@ struct HomePlaceholderView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: heroHeight)
-        .overlay(alignment: .topTrailing) {
-            scanButton
-                .padding(.top, 4)
-                .padding(.trailing, 16)
+        .overlay(alignment: .top) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    scanButton
+                    if showsSpaceTooltip {
+                        spaceTooltip
+                    }
+                }
+
+                Spacer()
+
+                profileButton
+            }
+            .padding(.top, 4)
+            .padding(.horizontal, 16)
         }
     }
 
     private var scanButton: some View {
-        Button(action: onFindForSpace) {
+        Button {
+            showsSpaceTooltip = false
+            onFindForSpace()
+        } label: {
             Image(systemName: "camera.viewfinder")
                 .font(.system(size: 22, weight: .semibold))
                 .frame(width: 44, height: 44)
         }
         .buttonStyle(.glass)
         .accessibilityLabel("Scan your space")
+    }
+
+    private var profileButton: some View {
+        Button(action: { showProfile = true }) {
+            Group {
+                if let data = profile.avatarData, let image = UIImage(data: data) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+            }
+            .frame(width: 44, height: 44)
+            .clipShape(Circle())
+        }
+        .buttonStyle(.glass)
+        .accessibilityLabel("Open profile")
+    }
+
+    private var spaceTooltip: some View {
+        Text("See what your space could have")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.leading)
+            .frame(width: 154, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(alignment: .topLeading) {
+                Triangle()
+                    .fill(.black.opacity(0.7))
+                    .frame(width: 14, height: 7)
+                    .offset(x: 15, y: -6)
+            }
+    }
+}
+
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.midX, y: 0))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.closeSubpath()
+        }
     }
 }
 
