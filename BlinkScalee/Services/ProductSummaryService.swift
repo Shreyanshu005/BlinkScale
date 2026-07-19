@@ -9,7 +9,7 @@ import FoundationModels
 
 @Generable
 private struct ProductInsight: Codable {
-    @Guide(description: "A concise, friendly product summary in two sentences or fewer. Use only the supplied catalog facts and image; do not invent specifications, availability, discounts, or claims.")
+    @Guide(description: "A friendly, useful product summary of 3 short sentences. Cover what it is, its best use or placement, and one grounded practical detail such as its size, quantity, or price. Use only the supplied catalog facts and image; do not invent specifications, availability, discounts, or claims.")
     var summary: String
 }
 
@@ -17,13 +17,13 @@ private struct ProductInsight: Codable {
 final class ProductSummaryService {
     private let session = LanguageModelSession(
         instructions: Instructions {
-            "You summarize catalog products for BlinkScalee. Be accurate, useful, concise, and only use supplied product information and the attached catalog image."
+            "You summarize catalog products for BlinkScalee. Be accurate and useful, using three short sentences so the shopper gets a meaningful overview. Only use supplied product information and the attached catalog image."
         }
     )
 
     func summary(for product: MockProduct) async -> String {
         guard case .available = SystemLanguageModel.default.availability else {
-            return product.mockDescription
+            return fallbackSummary(for: product)
         }
 
         let dims = product.referenceDimensionsCM
@@ -49,9 +49,14 @@ final class ProductSummaryService {
                 }
             }
             let text = response.content.summary.trimmingCharacters(in: .whitespacesAndNewlines)
-            return text.isEmpty ? product.mockDescription : text
+            return text.isEmpty ? fallbackSummary(for: product) : text
         } catch {
-            return product.mockDescription
+            return fallbackSummary(for: product)
         }
+    }
+
+    private func fallbackSummary(for product: MockProduct) -> String {
+        let dims = product.referenceDimensionsCM
+        return "\(product.mockDescription) It measures \(dims.width.formatted()) cm wide, \(dims.height.formatted()) cm high, and \(dims.depth.formatted()) cm deep. It is listed at \(product.priceRupees.asRupeeLabel) for \(product.weightOrSizeLabel)."
     }
 }

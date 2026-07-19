@@ -3,7 +3,7 @@
 //  BlinkScalee
 //
 //  Owns the ARSession lifecycle: floor detection, raycast placement, and
-//  post-placement gestures (pinch scale, rotate, long-press re-place).
+//  post-placement gestures (one-finger rotation and long-press re-place).
 //  Published state drives the SwiftUI overlay in ARPreviewView/
 //  PolishedARPreviewView — the view itself never touches ARKit/RealityKit
 //  types directly.
@@ -99,6 +99,7 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         arView.session.run(config)
 
         scanningStatusText = source.requiredSurface == .wall ? "Scanning for a wall…" : "Scanning for floor…"
+        ToastCenter.shared.loading("Scanning for a place to put your product…")
 
         addGestureRecognizers(to: arView)
         showPlacementIndicator()
@@ -199,10 +200,12 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         }
         if hasMatch {
             isFloorDetected = true
-            scanningStatusText = alignment == .vertical ? "Tap the wall to place" : "Tap to place"
+            let prompt = alignment == .vertical ? "Tap the wall to place" : "Tap to place"
+            scanningStatusText = prompt
             placementIndicator?.isEnabled = true
             startPulseAnimation()
             hapticImpact.impactOccurred()
+            ToastCenter.shared.show(prompt, duration: .seconds(1.5))
         }
     }
 
@@ -212,10 +215,11 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         arView.addGestureRecognizer(tap)
 
-        // Pinch-to-resize intentionally not registered — the model is shown at
-        // its real, scale-corrected size and users must not zoom it in/out.
-
-        let rotate = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation(_:)))
+        // A one-finger horizontal drag is easy to discover while holding the
+        // phone. Scale remains locked to the product's real dimensions.
+        let rotate = UIPanGestureRecognizer(target: self, action: #selector(handlePanRotation(_:)))
+        rotate.minimumNumberOfTouches = 1
+        rotate.maximumNumberOfTouches = 1
         arView.addGestureRecognizer(rotate)
 
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
@@ -296,8 +300,10 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         let requiredSurface = contentSource.requiredSurface
         let detectedSurface = surfaceKind(for: firstResult.worldTransform, in: arView)
         guard detectedSurface == requiredSurface else {
-            ToastCenter.shared.error(
-                "This looks like a \(requiredSurface.displayName) item — point your camera at a \(requiredSurface.displayName) instead of the \(detectedSurface.displayName) to place it."
+            ToastCenter.shared.show(
+                "This looks like a \(requiredSurface.displayName) item — point your camera at a \(requiredSurface.displayName) instead of the \(detectedSurface.displayName) to place it.",
+                style: .error,
+                duration: .seconds(1.8)
             )
             return
         }
@@ -344,6 +350,11 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         scanningStatusText = "Walk around it"
         stopPulseAnimation()
         hapticImpact.impactOccurred()
+        ToastCenter.shared.show(
+            "Placed. Drag one finger left or right to rotate.",
+            style: .success,
+            duration: .seconds(1.8)
+        )
     }
 
     // MARK: Post-placement gestures
@@ -362,13 +373,15 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         }
     }
 
-    @objc private func handleRotation(_ gesture: UIRotationGestureRecognizer) {
+    @objc private func handlePanRotation(_ gesture: UIPanGestureRecognizer) {
         guard let entity = productEntity else { return }
         switch gesture.state {
         case .changed:
-            let yaw = simd_quatf(angle: Float(-gesture.rotation), axis: [0, 1, 0])
+            let translation = gesture.translation(in: gesture.view)
+            guard abs(translation.x) > 0 else { return }
+            let yaw = simd_quatf(angle: Float(translation.x) * 0.01, axis: [0, 1, 0])
             entity.transform.rotation = entity.transform.rotation * yaw
-            gesture.rotation = 0
+            gesture.setTranslation(.zero, in: gesture.view)
         default:
             break
         }
@@ -390,12 +403,14 @@ final class ARCoordinator: NSObject, ObservableObject, ARSessionDelegate {
         placementIndicator?.isEnabled = true
         startPulseAnimation()
         hapticImpact.impactOccurred()
+        ToastCenter.shared.show(scanningStatusText, duration: .seconds(1.5))
     }
 
     // MARK: Teardown
 
     func tearDown() {
         stopPulseAnimation()
+        ToastCenter.shared.dismissLoading()
         arView?.session.pause()
     }
 }

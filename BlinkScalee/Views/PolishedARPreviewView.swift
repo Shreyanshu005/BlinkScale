@@ -58,14 +58,8 @@ struct PolishedARPreviewView: View {
             .ignoresSafeArea()
 
             VStack {
-                topStatusBar
+                backButton
                 Spacer()
-                VStack(spacing: 16) {
-                    if coordinator.isPlaced {
-                        infoCard
-                    }
-                    controlBar
-                }
             }
             .padding()
         }
@@ -97,58 +91,19 @@ struct PolishedARPreviewView: View {
             .allowsHitTesting(false)
     }
 
-    private var topStatusBar: some View {
+    private var backButton: some View {
         HStack {
-            Image(systemName: coordinator.isFloorDetected ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath")
-                .foregroundStyle(coordinator.isFloorDetected ? .green : .white)
-            Text(coordinator.scanningStatusText)
-                .fontWeight(.medium)
-            Spacer()
             Button(action: onDone) {
-                Image(systemName: "chevron.backward.circle.fill")
-                    .font(.title2)
+                Image(systemName: "chevron.backward")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 44, height: 44)
             }
+            .buttonStyle(.glass)
+            .accessibilityLabel("Back")
+            Spacer()
         }
         .foregroundStyle(.white)
         .shadow(color: .black.opacity(0.5), radius: 6)
     }
 
-    private var infoCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: productImageSystemName)
-                Text(productName)
-                    .fontWeight(.semibold)
-                    .lineLimit(1)
-                Spacer()
-            }
-            Text(dimensionsLabel)
-                .font(.title3.weight(.bold))
-            Label("Walk around it", systemImage: "figure.walk")
-                .font(.footnote)
-                .foregroundStyle(.white.opacity(0.7))
-        }
-        .foregroundStyle(.white)
-        .shadow(color: .black.opacity(0.5), radius: 6)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var controlBar: some View {
-        HStack(spacing: 16) {
-            controlPill(icon: "rotate.3d", label: "Twist to rotate")
-            controlPill(icon: "hand.tap.fill", label: "Hold to re-place")
-        }
-        .font(.caption)
-        .foregroundStyle(.white.opacity(0.9))
-        .shadow(color: .black.opacity(0.5), radius: 4)
-        .opacity(coordinator.isPlaced ? 1 : 0)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func controlPill(icon: String, label: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-            Text(label)
-        }
-    }
 }

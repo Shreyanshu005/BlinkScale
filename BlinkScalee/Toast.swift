@@ -25,11 +25,12 @@ final class ToastCenter {
         let style: Style
     }
 
-    enum Style {
-        case info, success, error
+    enum Style: Equatable {
+        case loading, info, success, error
 
         var icon: String {
             switch self {
+            case .loading: ""
             case .info: "info.circle.fill"
             case .success: "checkmark.circle.fill"
             case .error: "exclamationmark.triangle.fill"
@@ -38,6 +39,7 @@ final class ToastCenter {
 
         var tint: Color {
             switch self {
+            case .loading: .secondary
             case .info: Color.blinkitOrange
             case .success: .green
             case .error: .red
@@ -58,7 +60,7 @@ final class ToastCenter {
         switch style {
         case .success: UINotificationFeedbackGenerator().notificationOccurred(.success)
         case .error: UINotificationFeedbackGenerator().notificationOccurred(.error)
-        case .info: break
+        case .loading, .info: break
         }
         dismissTask = Task {
             try? await Task.sleep(for: duration)
@@ -69,6 +71,21 @@ final class ToastCenter {
 
     func success(_ message: String) { show(message, style: .success) }
     func error(_ message: String) { show(message, style: .error) }
+
+    /// Shows an indefinite progress toast until the caller replaces or
+    /// explicitly dismisses it. Used while ARKit is finding a surface.
+    func loading(_ message: String) {
+        dismissTask?.cancel()
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            current = Toast(message: message, style: .loading)
+        }
+    }
+
+    func dismissLoading() {
+        guard current?.style == .loading else { return }
+        dismissTask?.cancel()
+        withAnimation(.easeIn(duration: 0.2)) { current = nil }
+    }
 }
 
 private struct ToastHostModifier: ViewModifier {
@@ -76,8 +93,13 @@ private struct ToastHostModifier: ViewModifier {
         content.overlay(alignment: .top) {
             if let toast = ToastCenter.shared.current {
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: toast.style.icon)
-                        .foregroundStyle(toast.style.tint)
+                    if toast.style == .loading {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Image(systemName: toast.style.icon)
+                            .foregroundStyle(toast.style.tint)
+                    }
                     Text(toast.message)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)

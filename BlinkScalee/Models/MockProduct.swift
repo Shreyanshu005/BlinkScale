@@ -152,7 +152,7 @@ extension UIColor {
 }
 
 extension MockProduct {
-    static let all: [MockProduct] = [
+    private static let catalog: [MockProduct] = [
         MockProduct(
             name: "Portronics My Buddy D Adjustable Laptop Table (Crimson Red)",
             category: "Furniture",
@@ -363,6 +363,12 @@ extension MockProduct {
             polishedPageContent: .owlPyriteStone
         )
     ]
+
+    /// Keep the laptop table available everywhere, but behind the rest of
+    /// the catalog so it never leads the Home, Category, or Search grids.
+    static let all: [MockProduct] =
+        catalog.filter { !$0.name.hasPrefix("Portronics My Buddy") }
+        + catalog.filter { $0.name.hasPrefix("Portronics My Buddy") }
 
     /// Just the table/furniture SKUs, kept as a convenience filter for
     /// anything that specifically wants furniture only.
